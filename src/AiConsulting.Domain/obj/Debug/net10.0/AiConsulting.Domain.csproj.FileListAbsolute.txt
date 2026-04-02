@@ -9,3 +9,4 @@
 /Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Domain/obj/Debug/net10.0/refint/AiConsulting.Domain.dll
 /Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Domain/obj/Debug/net10.0/AiConsulting.Domain.pdb
 /Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Domain/obj/Debug/net10.0/ref/AiConsulting.Domain.dll
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Domain/obj/Debug/net10.0/AiConsulting.Domain.sourcelink.json

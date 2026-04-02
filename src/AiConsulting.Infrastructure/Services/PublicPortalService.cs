@@ -12,17 +12,20 @@ public class PublicPortalService : IPublicPortalService
     private readonly IServiceRepository _serviceRepository;
     private readonly IContactRequestRepository _contactRequestRepository;
     private readonly IOpportunityRepository _opportunityRepository;
+    private readonly WebhookQueue _webhookQueue;
     private readonly ILogger<PublicPortalService> _logger;
 
     public PublicPortalService(
         IServiceRepository serviceRepository,
         IContactRequestRepository contactRequestRepository,
         IOpportunityRepository opportunityRepository,
+        WebhookQueue webhookQueue,
         ILogger<PublicPortalService> logger)
     {
         _serviceRepository = serviceRepository;
         _contactRequestRepository = contactRequestRepository;
         _opportunityRepository = opportunityRepository;
+        _webhookQueue = webhookQueue;
         _logger = logger;
     }
 
@@ -155,7 +158,17 @@ public class PublicPortalService : IPublicPortalService
 
         await _opportunityRepository.AddAsync(opportunity);
 
-        _logger.LogInformation("Notificación enviada al consultor para solicitud {Id}", contactRequest.Id);
+        // Encolar webhook: el BackgroundService lo envía sin bloquear ni arriesgar la operación principal
+        _webhookQueue.TryEnqueue("contact.created", new
+        {
+            contactId = contactRequest.Id,
+            name = request.Name,
+            email = request.Email,
+            company = request.Company,
+            opportunityId = opportunity.Id
+        });
+
+        _logger.LogInformation("Solicitud de contacto {Id} registrada", contactRequest.Id);
 
         return new ContactRequestResultDto
         {

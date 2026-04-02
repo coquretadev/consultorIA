@@ -3,6 +3,7 @@ using AiConsulting.Application.Services;
 using AiConsulting.Domain.Entities;
 using AiConsulting.Domain.Enums;
 using AiConsulting.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace AiConsulting.Infrastructure.Services;
@@ -12,20 +13,20 @@ public class CalendarService : ICalendarService
     private readonly IConsultorAvailabilityRepository _availabilityRepository;
     private readonly IBookingSlotRepository _bookingSlotRepository;
     private readonly IOpportunityRepository _opportunityRepository;
-    private readonly INotificationService _notificationService;
+    private readonly WebhookQueue _webhookQueue;
     private readonly ILogger<CalendarService> _logger;
 
     public CalendarService(
         IConsultorAvailabilityRepository availabilityRepository,
         IBookingSlotRepository bookingSlotRepository,
         IOpportunityRepository opportunityRepository,
-        INotificationService notificationService,
+        WebhookQueue webhookQueue,
         ILogger<CalendarService> logger)
     {
         _availabilityRepository = availabilityRepository;
         _bookingSlotRepository = bookingSlotRepository;
         _opportunityRepository = opportunityRepository;
-        _notificationService = notificationService;
+        _webhookQueue = webhookQueue;
         _logger = logger;
     }
 
@@ -111,9 +112,22 @@ public class CalendarService : ICalendarService
             CreatedAt = DateTime.UtcNow
         };
 
-        await _bookingSlotRepository.AddAsync(slot);
+        try
+        {
+            await _bookingSlotRepository.AddAsync(slot);
+        }
+        catch (DbUpdateException)
+        {
+            // Unique constraint violation: otro usuario reservó el mismo slot concurrentemente
+            return new BookingResultDto
+            {
+                Success = false,
+                Message = "El horario seleccionado acaba de ser reservado. Por favor, elige otro."
+            };
+        }
 
-        await _notificationService.SendWebhookAsync("booking.created", new
+        // Encolar webhook: el BackgroundService lo envía sin bloquear ni arriesgar la reserva
+        _webhookQueue.TryEnqueue("booking.created", new
         {
             bookingId = slot.Id,
             date = dto.Date,

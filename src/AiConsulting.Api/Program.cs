@@ -10,12 +10,23 @@ using AiConsulting.Infrastructure.Repositories;
 using AiConsulting.Infrastructure.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Soporte para reverse proxy (nginx, Azure App Gateway): leer IP real del cliente
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor
+        | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+    // En producción, restringir a las IPs conocidas del proxy
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
@@ -60,13 +71,17 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 // Rate limiting
-builder.Services.AddRateLimiter(options => options.AddFixedWindowLimiter("ContactEndpoint", o =>
+builder.Services.AddRateLimiter(options =>
 {
-    o.PermitLimit = 5;
-    o.Window = TimeSpan.FromMinutes(15);
-    o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-    o.QueueLimit = 0;
-}));
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddFixedWindowLimiter("ContactEndpoint", o =>
+    {
+        o.PermitLimit = 5;
+        o.Window = TimeSpan.FromMinutes(15);
+        o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        o.QueueLimit = 0;
+    });
+});
 
 // Repositories
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
@@ -103,6 +118,10 @@ builder.Services.AddScoped<ICalendarService, CalendarService>();
 builder.Services.AddHttpClient<INotificationService, NotificationService>();
 builder.Services.AddScoped<IValidator<ContactRequestDto>, ContactRequestValidator>();
 
+// Webhook queue: singleton compartido entre requests, drenado por el BackgroundService
+builder.Services.AddSingleton<WebhookQueue>();
+builder.Services.AddHostedService<WebhookDispatcherService>();
+
 var app = builder.Build();
 
 // Seed data en desarrollo
@@ -119,6 +138,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
+app.UseForwardedHeaders();
 app.UseHttpsRedirection();
 app.UseCors("BlazorWasm");
 app.UseRateLimiter();

@@ -2,7 +2,7 @@
 
 ## Visión General
 
-Implementación incremental de la plataforma de consultoría de integración de IA siguiendo Clean Architecture con .NET 8+, ASP.NET Core, PostgreSQL, EF Core, Blazor WASM, xUnit y FsCheck. El diseño incluye 14 componentes, 19 entidades, 31 propiedades de corrección y soporte para multi-idioma, analytics, SEO, calendario de llamadas, webhooks y rate limiting. Cada tarea construye sobre las anteriores, integrando código progresivamente.
+Implementación incremental de la plataforma de consultoría de integración de IA siguiendo Clean Architecture con .NET 8+, ASP.NET Core, PostgreSQL, EF Core, Blazor WASM, xUnit y FsCheck. El diseño incluye 16 componentes, 20 entidades, 36 propiedades de corrección y soporte para multi-idioma, analytics, SEO, calendario de llamadas, webhooks, rate limiting, estrategia de migraciones en producción y documentación de despliegue. Cada tarea construye sobre las anteriores, integrando código progresivamente.
 
 ## Tareas
 
@@ -27,7 +27,7 @@ Implementación incremental de la plataforma de consultoría de integración de 
     - Crear interfaces de repositorio: `IServiceRepository`, `IClientRepository`, `IOpportunityRepository`, `IProjectRepository`, `IProjectTemplateRepository`, `IInvoiceRepository`, `IExpenseRepository`, `ITrainingRepository`, `IContactRequestRepository`, `INotificationConfigRepository`, `IServiceTranslationRepository`, `IPageVisitRepository`, `IConsultorAvailabilityRepository`, `IBookingSlotRepository`
     - _Requisitos: Todos (acceso a datos)_
 
-  - [ ]* 1.5 Escribir tests unitarios para la lógica de dominio
+  - [x]* 1.5 Escribir tests unitarios para la lógica de dominio
     - Test de cálculo de `ProgressPercentage`: proyecto sin entregables = 0%, con todos completados = 100%, parcial = proporción correcta
     - Test de validación `PriceRangeMin <= PriceRangeMax` en `Service`
     - Test de cálculo de `DaysInPreviousPhase` en `PhaseTransition`
@@ -74,19 +74,19 @@ Implementación incremental de la plataforma de consultoría de integración de 
     - Manejar fallos de webhook sin afectar la operación principal (log del error para reintento manual)
     - _Requisitos: 1.2, 11.3_
 
-  - [ ]* 4.4 Escribir test de propiedad para solicitud de contacto con webhook y oportunidad (round-trip)
+  - [x]* 4.4 Escribir test de propiedad para solicitud de contacto con webhook y oportunidad (round-trip)
     - **Propiedad 1: Round-trip de solicitud de contacto con webhook y oportunidad**
     - **Valida: Requisitos 1.2, 3.3**
 
-  - [ ]* 4.5 Escribir test de propiedad para validación de formulario de contacto
+  - [x]* 4.5 Escribir test de propiedad para validación de formulario de contacto
     - **Propiedad 2: Validación de formulario de contacto con campos vacíos**
     - **Valida: Requisito 1.6**
 
-  - [ ]* 4.6 Escribir test de propiedad para servicios públicos activos
+  - [x]* 4.6 Escribir test de propiedad para servicios públicos activos
     - **Propiedad 3: Servicios públicos muestran solo activos con campos completos**
     - **Valida: Requisitos 1.1, 7.3, 7.4**
 
-  - [ ]* 4.7 Escribir test de propiedad para webhook de notificación al crear contacto
+  - [x]* 4.7 Escribir test de propiedad para webhook de notificación al crear contacto
     - **Propiedad 23: Webhook de notificación al crear contacto**
     - **Valida: Requisito 1.2**
 
@@ -101,11 +101,11 @@ Implementación incremental de la plataforma de consultoría de integración de 
     - Implementar CRUD de clientes: crear, editar, archivar, consultar con paginación y filtros
     - _Requisitos: 2.2_
 
-  - [ ]* 5.3 Escribir test de propiedad para round-trip de clientes
+  - [x]* 5.3 Escribir test de propiedad para round-trip de clientes
     - **Propiedad 4: Round-trip de clientes**
     - **Valida: Requisito 2.2**
 
-  - [ ]* 5.4 Escribir test de propiedad para autenticación requerida
+  - [x]* 5.4 Escribir test de propiedad para autenticación requerida
     - **Propiedad 7: Endpoints protegidos requieren autenticación**
     - **Valida: Requisito 2.5**
 
@@ -122,23 +122,23 @@ Implementación incremental de la plataforma de consultoría de integración de 
     - Implementar CRUD básico de oportunidades
     - _Requisitos: 3.1, 3.2, 3.4, 3.5, 3.6, 3.7_
 
-  - [ ]* 6.3 Escribir test de propiedad para transiciones de fase
+  - [x]* 6.3 Escribir test de propiedad para transiciones de fase
     - **Propiedad 8: Transiciones de fase registran tiempo**
     - **Valida: Requisito 3.2**
 
-  - [ ]* 6.4 Escribir test de propiedad para agrupación kanban
+  - [x]* 6.4 Escribir test de propiedad para agrupación kanban
     - **Propiedad 9: Oportunidades agrupadas por fase (kanban)**
     - **Valida: Requisitos 3.1, 3.4**
 
-  - [ ]* 6.5 Escribir test de propiedad para cerrado ganado
+  - [x]* 6.5 Escribir test de propiedad para cerrado ganado
     - **Propiedad 10: Cerrado ganado solicita creación de proyecto**
     - **Valida: Requisito 3.5**
 
-  - [ ]* 6.6 Escribir test de propiedad para valor estimado
+  - [x]* 6.6 Escribir test de propiedad para valor estimado
     - **Propiedad 11: Valor estimado de oportunidad persiste correctamente**
     - **Valida: Requisito 3.6**
 
-  - [ ]* 6.7 Escribir test de propiedad para alerta de oportunidad estancada
+  - [x]* 6.7 Escribir test de propiedad para alerta de oportunidad estancada
     - **Propiedad 12: Alerta de oportunidad estancada**
     - **Valida: Requisito 3.7**
 
@@ -159,23 +159,23 @@ Implementación incremental de la plataforma de consultoría de integración de 
     - Implementar consultas con filtros y paginación
     - _Requisitos: 2.3, 2.4, 2.6, 4.2, 4.3, 4.4, 4.5_
 
-  - [ ]* 8.3 Escribir test de propiedad para proyecto asociado a cliente
+  - [x]* 8.3 Escribir test de propiedad para proyecto asociado a cliente
     - **Propiedad 5: Proyecto siempre asociado a cliente y servicio**
     - **Valida: Requisitos 2.3, 4.6**
 
-  - [ ]* 8.4 Escribir test de propiedad para historial de estados
+  - [x]* 8.4 Escribir test de propiedad para historial de estados
     - **Propiedad 6: Historial de estados del proyecto**
     - **Valida: Requisito 2.6**
 
-  - [ ]* 8.5 Escribir test de propiedad para creación desde plantilla
+  - [x]* 8.5 Escribir test de propiedad para creación desde plantilla
     - **Propiedad 13: Creación de proyecto desde plantilla genera entregables**
     - **Valida: Requisito 4.2**
 
-  - [ ]* 8.6 Escribir test de propiedad para cálculo de porcentaje de avance
+  - [x]* 8.6 Escribir test de propiedad para cálculo de porcentaje de avance
     - **Propiedad 14: Cálculo de porcentaje de avance**
     - **Valida: Requisitos 4.4, 6.2**
 
-  - [ ]* 8.7 Escribir test de propiedad para round-trip de registro de horas
+  - [x]* 8.7 Escribir test de propiedad para round-trip de registro de horas
     - **Propiedad 15: Round-trip de registro de horas**
     - **Valida: Requisito 4.5**
 
@@ -191,19 +191,19 @@ Implementación incremental de la plataforma de consultoría de integración de 
     - Implementar CRUD de facturas y gastos con filtros y paginación
     - _Requisitos: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
 
-  - [ ]* 9.3 Escribir test de propiedad para beneficio neto
+  - [x]* 9.3 Escribir test de propiedad para beneficio neto
     - **Propiedad 16: Beneficio neto es ingresos menos gastos**
     - **Valida: Requisitos 5.1, 5.2**
 
-  - [ ]* 9.4 Escribir test de propiedad para round-trip de gastos
+  - [x]* 9.4 Escribir test de propiedad para round-trip de gastos
     - **Propiedad 17: Round-trip de gastos**
     - **Valida: Requisito 5.3**
 
-  - [ ]* 9.5 Escribir test de propiedad para proyección financiera
+  - [x]* 9.5 Escribir test de propiedad para proyección financiera
     - **Propiedad 18: Proyección financiera cubre 12 meses**
     - **Valida: Requisitos 5.4, 5.5**
 
-  - [ ]* 9.6 Escribir test de propiedad para alerta de resultado negativo
+  - [x]* 9.6 Escribir test de propiedad para alerta de resultado negativo
     - **Propiedad 19: Alerta de resultado negativo mensual**
     - **Valida: Requisito 5.6**
 
@@ -224,11 +224,11 @@ Implementación incremental de la plataforma de consultoría de integración de 
     - Implementar `DeleteServiceAsync`: verificar si tiene proyectos asociados, rechazar sin confirmación, proceder con confirmación
     - _Requisitos: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-  - [ ]* 11.3 Escribir test de propiedad para round-trip de servicios del catálogo
+  - [x]* 11.3 Escribir test de propiedad para round-trip de servicios del catálogo
     - **Propiedad 20: Round-trip de servicios del catálogo**
     - **Valida: Requisitos 7.1, 7.2**
 
-  - [ ]* 11.4 Escribir test de propiedad para eliminación con proyectos
+  - [x]* 11.4 Escribir test de propiedad para eliminación con proyectos
     - **Propiedad 21: Eliminación de servicio con proyectos requiere confirmación**
     - **Valida: Requisito 7.5**
 
@@ -250,7 +250,7 @@ Implementación incremental de la plataforma de consultoría de integración de 
     - Implementar CRUD de `ServiceTranslation` asociado al servicio
     - _Requisitos: 8.5_
 
-  - [ ]* 12.4 Escribir test de propiedad para contenido localizado por idioma
+  - [x]* 12.4 Escribir test de propiedad para contenido localizado por idioma
     - **Propiedad 24: Contenido localizado por idioma**
     - **Valida: Requisitos 8.1, 8.3**
 
@@ -267,15 +267,15 @@ Implementación incremental de la plataforma de consultoría de integración de 
     - Registrar automáticamente cada request a rutas públicas: página visitada, referrer, user-agent, tipo de dispositivo, generar hash SHA-256 de IP
     - No registrar requests a la API del Panel Consultor (rutas autenticadas)
   - [x] 14.1 Configurar proyecto Blazor WASM y servicios HTTP
-  - [ ]* 13.3 Escribir test de propiedad para registro de visitas
+  - [x]* 13.3 Escribir test de propiedad para registro de visitas
     - **Propiedad 25: Registro de visitas incrementa contadores**
     - **Valida: Requisitos 9.1, 9.3**
 
-  - [ ]* 13.4 Escribir test de propiedad para métricas filtradas por periodo
+  - [x]* 13.4 Escribir test de propiedad para métricas filtradas por periodo
     - **Propiedad 26: Métricas de analytics filtradas por periodo**
     - **Valida: Requisitos 9.2, 9.5**
 
-  - [ ]* 13.5 Escribir test de propiedad para ranking de servicios
+  - [x]* 13.5 Escribir test de propiedad para ranking de servicios
     - **Propiedad 27: Ranking de servicios más consultados**
     - **Valida: Requisito 9.4**
 
@@ -287,11 +287,11 @@ Implementación incremental de la plataforma de consultoría de integración de 
     - Crear DTOs: `SeoMetaDto`
     - _Requisitos: 10.1, 10.2, 10.3, 10.4, 10.5_
 
-  - [ ]* 14.2 Escribir test de propiedad para sitemap
+  - [x]* 14.2 Escribir test de propiedad para sitemap
     - **Propiedad 28: Sitemap contiene todas las páginas públicas**
     - **Valida: Requisitos 10.2, 10.5**
 
-  - [ ]* 14.3 Escribir test de propiedad para meta tags
+  - [x]* 14.3 Escribir test de propiedad para meta tags
     - **Propiedad 29: Meta tags generados para servicios**
     - **Valida: Requisitos 10.1, 10.3**
 
@@ -304,11 +304,11 @@ Implementación incremental de la plataforma de consultoría de integración de 
     - Crear validador: VisitorName, VisitorEmail y VisitorCompany obligatorios en `BookSlotDto`
     - _Requisitos: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6_
 
-  - [ ]* 15.2 Escribir test de propiedad para reserva de llamada
+  - [x]* 15.2 Escribir test de propiedad para reserva de llamada
     - **Propiedad 30: Reserva de llamada crea oportunidad y dispara webhook**
     - **Valida: Requisitos 11.2, 11.3, 11.5**
 
-  - [ ]* 15.3 Escribir test de propiedad para round-trip de disponibilidad
+  - [x]* 15.3 Escribir test de propiedad para round-trip de disponibilidad
     - **Propiedad 31: Round-trip de disponibilidad del consultor**
     - **Valida: Requisito 11.4**
 
@@ -327,7 +327,7 @@ Implementación incremental de la plataforma de consultoría de integración de 
     - Configurar respuesta HTTP 429 Too Many Requests con header `Retry-After`
     - _Requisitos: 1.7, 1.8_
 
-  - [ ]* 17.3 Escribir test de propiedad para rate limiting
+  - [x]* 17.3 Escribir test de propiedad para rate limiting
     - **Propiedad 22: Rate limiting en endpoint de contacto**
     - **Valida: Requisitos 1.7, 1.8**
 
@@ -458,12 +458,112 @@ Implementación incremental de la plataforma de consultoría de integración de 
 - [x] 21. Checkpoint final — Verificar integración completa
   - Asegurar que todos los tests pasan, preguntar al usuario si surgen dudas.
 
+- [ ] 22. Capa de dominio — Entidad MigrationLog y enum MigrationResult
+  - [ ] 22.1 Crear enum `MigrationResult` y entidad `MigrationLog`
+    - Crear enum `MigrationResult` con valores: `Success`, `Failed`, `RolledBack`
+    - Crear entidad `MigrationLog` con campos: Id (Guid), MigrationName (string 300), ScriptFileName (string 500), AppliedAt (DateTime), AppliedBy (string 200), Result (MigrationResult), Notes (string 2000, nullable)
+    - Crear interfaz `IMigrationLogRepository` con métodos: AddAsync, GetAllAsync, UpdateAsync
+    - _Requisitos: 12.6_
+
+  - [ ] 22.2 Configurar mapeo EF Core para MigrationLog
+    - Agregar `DbSet<MigrationLog>` al `AiConsultingDbContext`
+    - Configurar mapeo Fluent API: longitudes de campos, índice en `AppliedAt`
+    - Generar migración EF Core para la nueva entidad
+    - Implementar `MigrationLogRepository` usando EF Core
+    - _Requisitos: 12.6_
+
+- [ ] 23. Capa de aplicación — Servicio de log de migraciones
+  - [ ] 23.1 Implementar DTOs y validadores para migraciones
+    - Crear DTOs: `MigrationLogDto`, `RecordMigrationDto`
+    - Crear validador FluentValidation para `RecordMigrationDto`: MigrationName y ScriptFileName obligatorios, Result debe ser un valor válido del enum
+    - _Requisitos: 12.1, 12.6_
+
+  - [ ] 23.2 Implementar `IMigrationLogService`
+    - Implementar `RecordMigrationAsync`: persistir registro de migración con fecha, nombre, archivo SQL y resultado
+    - Implementar `GetMigrationHistoryAsync`: devolver historial de migraciones ordenado por fecha descendente
+    - Implementar `UpdateMigrationResultAsync`: actualizar resultado de una migración (ej: marcar como RolledBack) con notas opcionales
+    - _Requisitos: 12.4, 12.6_
+
+  - [ ]* 23.3 Escribir test de propiedad para round-trip de registro de migraciones
+    - **Propiedad 34: Round-trip de registro de migraciones**
+    - **Valida: Requisito 12.6**
+
+- [ ] 24. Capa API — Controller de migraciones y protección de producción
+  - [ ] 24.1 Implementar `MigrationsController`
+    - Crear `MigrationsController` con endpoints protegidos con `[Authorize]`:
+      - `POST /api/migrations/log` — registrar migración aplicada
+      - `GET /api/migrations/log` — historial de migraciones
+      - `PATCH /api/migrations/log/{id}` — actualizar resultado de migración
+    - Configurar respuestas Problem Details para errores de validación
+    - Registrar `IMigrationLogService` en inyección de dependencias en Program.cs
+    - _Requisitos: 12.1, 12.3, 12.6_
+
+  - [ ] 24.2 Proteger Program.cs contra migraciones automáticas en producción
+    - Verificar que `Database.Migrate()` y `Database.EnsureCreated()` NO se ejecuten en producción
+    - Asegurar que el seed automático solo se ejecute en entorno de desarrollo (`IsDevelopment()`)
+    - Agregar comentario explícito en Program.cs indicando que las migraciones se aplican solo mediante Script SQL revisado
+    - _Requisitos: 12.2_
+
+  - [ ]* 24.3 Escribir test de propiedad para prohibición de migraciones automáticas en producción
+    - **Propiedad 32: Prohibición de migraciones automáticas en producción**
+    - **Valida: Requisito 12.2**
+
+  - [ ] 24.4 Crear script de generación de SQL idempotente
+    - Crear script bash/powershell `scripts/generate-migration-sql.sh` que ejecute `dotnet ef migrations script --idempotent` con los parámetros correctos de proyecto
+    - Incluir instrucciones de uso en comentarios del script
+    - _Requisitos: 12.1, 12.3_
+
+  - [ ]* 24.5 Escribir test de propiedad para detección de operaciones destructivas
+    - **Propiedad 33: Detección de operaciones destructivas en scripts SQL**
+    - **Valida: Requisito 12.5**
+
+- [ ] 25. Checkpoint — Verificar estrategia de migraciones
+  - Asegurar que todos los tests pasan, preguntar al usuario si surgen dudas.
+
+- [ ] 26. Documentación de despliegue y configuración de producción
+  - [ ] 26.1 Crear documento `docs/DEPLOYMENT.md`
+    - Escribir sección de infraestructura mínima: servidor (VPS 2 vCPU, 4 GB RAM, 40 GB SSD), Ubuntu 22.04 LTS, .NET 10 Runtime, PostgreSQL 15+, nginx 1.24+, dominio con SSL
+    - Escribir sección de variables de entorno requeridas: ConnectionStrings__DefaultConnection, Jwt__Key, Jwt__Issuer, Jwt__Audience, Jwt__ExpiryMinutes, Webhooks__SlackUrl, Webhooks__TelegramUrl, ASPNETCORE_ENVIRONMENT, ASPNETCORE_URLS, AllowedCorsOrigins
+    - Escribir configuración de nginx como reverse proxy con terminación HTTPS (Let's Encrypt), incluyendo redirección HTTP→HTTPS
+    - Escribir script de backup PostgreSQL automatizado (`backup.sh`) con compresión gzip, verificación de integridad, retención de 30 días y configuración cron diaria
+    - Escribir procedimiento de despliegue paso a paso: backup previo, parada del servicio, aplicación de migraciones SQL, despliegue del binario, inicio del servicio, verificación de salud
+    - Escribir procedimiento de diagnóstico ante caídas: verificación de servicio, logs, estado de PostgreSQL, conectividad de nginx, espacio en disco
+    - _Requisitos: 13.1, 13.2, 13.3, 13.4, 13.5, 13.7_
+
+  - [ ] 26.2 Implementar validación de configuración requerida en Program.cs
+    - Agregar validación al inicio de la aplicación en producción: verificar que ConnectionStrings:DefaultConnection, Jwt:Key, Jwt:Issuer y Jwt:Audience estén presentes y no vacíos
+    - Lanzar `InvalidOperationException` con mensaje claro indicando la clave faltante si alguna no está configurada
+    - _Requisitos: 13.2_
+
+  - [ ]* 26.3 Escribir test de propiedad para validación de configuración requerida en producción
+    - **Propiedad 35: Validación de configuración requerida en producción**
+    - **Valida: Requisito 13.2**
+
+  - [ ] 26.4 Implementar CORS diferenciado por entorno en Program.cs
+    - En desarrollo: permitir cualquier origen (`AllowAnyOrigin`)
+    - En producción: restringir CORS a los dominios especificados en `AllowedCorsOrigins` de la configuración
+    - Lanzar error si `AllowedCorsOrigins` no está configurado en producción
+    - _Requisitos: 13.6_
+
+  - [ ]* 26.5 Escribir test de propiedad para CORS restringido en producción
+    - **Propiedad 36: CORS restringido en producción**
+    - **Valida: Requisito 13.6**
+
+  - [ ] 26.6 Implementar health check endpoint
+    - Agregar `AddHealthChecks()` con `AddNpgSql()` para verificar conectividad a PostgreSQL
+    - Mapear endpoint `/health` en Program.cs
+    - _Requisitos: 13.5_
+
+- [ ] 27. Checkpoint final — Verificar migraciones, despliegue y configuración de producción
+  - Asegurar que todos los tests pasan, preguntar al usuario si surgen dudas.
+
 ## Notas
 
 - Las tareas marcadas con `*` son opcionales y pueden omitirse para un MVP más rápido
 - Cada tarea referencia los requisitos específicos para trazabilidad
 - Los checkpoints aseguran validación incremental
-- Los tests de propiedad validan las 31 propiedades universales de corrección con FsCheck
+- Los tests de propiedad validan las 36 propiedades universales de corrección con FsCheck
 - Los tests unitarios complementan cubriendo ejemplos específicos y edge cases
-- El diseño incluye 14 componentes y 19 entidades de dominio
-- Nuevas funcionalidades: webhooks (Slack/Telegram), rate limiting, multi-idioma (es/en), analytics del portal, SEO (meta tags, sitemap, Open Graph), calendario de llamadas
+- El diseño incluye 16 componentes y 20 entidades de dominio
+- Funcionalidades existentes (tareas 1-21): webhooks (Slack/Telegram), rate limiting, multi-idioma (es/en), analytics del portal, SEO (meta tags, sitemap, Open Graph), calendario de llamadas
+- Nuevas funcionalidades (tareas 22-27): estrategia de migraciones en producción (Req. 12), documentación de despliegue con validación de configuración, CORS restringido y health check (Req. 13)

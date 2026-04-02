@@ -15,6 +15,9 @@ public class BookingSlotConfiguration : IEntityTypeConfiguration<BookingSlot>
         builder.Property(b => b.VisitorCompany).HasMaxLength(200).IsRequired();
         builder.Property(b => b.IsConfirmed).HasDefaultValue(false);
 
-        builder.HasIndex(b => new { b.Date, b.StartTime });
+        // Unique constraint para prevenir double-booking concurrente
+        builder.HasIndex(b => new { b.Date, b.StartTime })
+            .IsUnique()
+            .HasFilter("\"IsConfirmed\" = true");  // solo slots confirmados son únicos
     }
 }

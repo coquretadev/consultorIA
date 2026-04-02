@@ -25,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\AiConsulting.Application\AiConsulting.Application.csproj" />
     <ProjectReference Include="..\..\src\AiConsulting.Domain\AiConsulting.Domain.csproj" />
+    <ProjectReference Include="..\..\src\AiConsulting.Infrastructure\AiConsulting.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -24,6 +24,11 @@ Plataforma de herramientas para lanzar y operar un negocio de consultoría de in
 - **Widget_Calendario**: Componente embebido que permite a visitantes agendar llamadas de descubrimiento con el Consultor
 - **Webhook_Notificación**: Mecanismo de notificación instantánea a servicios externos (Slack, Telegram) ante eventos del sistema
 - **Rate_Limiter**: Mecanismo de protección que limita la frecuencia de peticiones al endpoint público de contacto
+- **Estrategia_Migraciones**: Procedimiento definido para aplicar migraciones de EF Core en el entorno de producción de forma segura y controlada
+- **Script_SQL_Migración**: Archivo SQL generado a partir de las migraciones de EF Core que permite aplicar cambios de esquema de forma manual y auditable
+- **Documentación_Despliegue**: Documento operativo que describe la infraestructura, configuración y procedimientos necesarios para llevar la Plataforma a producción
+- **Reverse_Proxy**: Servidor intermedio (nginx, Caddy) que gestiona HTTPS, compresión y reenvío de peticiones al backend de la Plataforma
+- **Backup_PostgreSQL**: Procedimiento de respaldo periódico de la base de datos PostgreSQL para garantizar la recuperación ante fallos
 
 ## Requisitos
 
@@ -166,3 +171,31 @@ Plataforma de herramientas para lanzar y operar un negocio de consultoría de in
 4. THE Panel_Consultor SHALL permitir al Consultor configurar su disponibilidad horaria semanal para las llamadas de descubrimiento
 5. WHEN un visitante agenda una llamada desde el Widget_Calendario, THE Pipeline_Ventas SHALL crear automáticamente una oportunidad en la fase "Contacto inicial" asociada a los datos del visitante
 6. IF un visitante intenta reservar un horario que ya no está disponible, THEN THE Widget_Calendario SHALL mostrar un mensaje indicando que el horario fue ocupado y ofrecer horarios alternativos
+
+
+### Requisito 12: Estrategia de Migraciones de Base de Datos en Producción
+
+**Historia de Usuario:** Como consultor, quiero una estrategia clara para aplicar migraciones de EF Core en producción, para que los cambios de esquema de base de datos se apliquen de forma segura, auditable y sin riesgo de pérdida de datos al desplegar nuevas versiones.
+
+#### Criterios de Aceptación
+
+1. THE Plataforma SHALL generar un Script_SQL_Migración a partir de cada migración de EF Core antes de aplicar cambios en el entorno de producción
+2. THE Estrategia_Migraciones SHALL prohibir la ejecución de migraciones automáticas de EF Core al arrancar la aplicación en el entorno de producción
+3. WHEN el Consultor prepara un despliegue con cambios de esquema, THE Estrategia_Migraciones SHALL requerir la revisión manual del Script_SQL_Migración antes de su aplicación en producción
+4. THE Estrategia_Migraciones SHALL incluir un procedimiento documentado para revertir una migración aplicada en producción en caso de error
+5. IF una migración de EF Core incluye operaciones destructivas (eliminación de tablas o columnas con datos), THEN THE Estrategia_Migraciones SHALL requerir un Backup_PostgreSQL previo a la aplicación del Script_SQL_Migración
+6. THE Plataforma SHALL registrar en un log la fecha, nombre y resultado de cada migración aplicada en producción
+
+### Requisito 13: Documentación de Despliegue a Producción
+
+**Historia de Usuario:** Como consultor, quiero documentación completa de despliegue a producción, para poder llevar la plataforma a un entorno real de forma reproducible, segura y sin depender de conocimiento no documentado.
+
+#### Criterios de Aceptación
+
+1. THE Documentación_Despliegue SHALL describir la infraestructura mínima necesaria para ejecutar la Plataforma en producción, incluyendo servidor, sistema operativo, versión de .NET y versión de PostgreSQL
+2. THE Documentación_Despliegue SHALL listar todas las variables de entorno y configuraciones requeridas en producción, incluyendo cadena de conexión a PostgreSQL, clave JWT, issuer, audience y URLs de webhook
+3. THE Documentación_Despliegue SHALL incluir la configuración de un Reverse_Proxy con terminación HTTPS para exponer la Plataforma de forma segura
+4. THE Documentación_Despliegue SHALL incluir un procedimiento de Backup_PostgreSQL automatizado con frecuencia mínima diaria y verificación de integridad del respaldo
+5. WHEN el Consultor despliega una nueva versión de la Plataforma, THE Documentación_Despliegue SHALL proporcionar un procedimiento paso a paso que incluya parada del servicio, aplicación de migraciones, despliegue del binario y verificación de salud del sistema
+6. THE Documentación_Despliegue SHALL incluir la configuración de CORS en producción restringida al dominio real de la Plataforma en lugar de permitir cualquier origen
+7. IF el servicio de la Plataforma deja de responder en producción, THEN THE Documentación_Despliegue SHALL describir un procedimiento de diagnóstico que incluya verificación de logs, estado de PostgreSQL y conectividad del Reverse_Proxy

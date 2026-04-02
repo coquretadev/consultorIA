@@ -1241,6 +1241,10 @@
               "target": "Package",
               "version": "[10.0.5, )"
             },
+            "Microsoft.Extensions.Hosting.Abstractions": {
+              "target": "Package",
+              "version": "[10.0.0, )"
+            },
             "Npgsql.EntityFrameworkCore.PostgreSQL": {
               "target": "Package",
               "version": "[10.0.1, )"
@@ -1597,9 +1601,17 @@
               "target": "Package",
               "version": "[8.9.0, )"
             },
+            "FsCheck.Xunit": {
+              "target": "Package",
+              "version": "[3.2.0, )"
+            },
             "Microsoft.AspNetCore.Mvc.Testing": {
               "target": "Package",
               "version": "[10.0.4, )"
+            },
+            "Microsoft.EntityFrameworkCore.Sqlite": {
+              "target": "Package",
+              "version": "[10.0.5, )"
             },
             "Microsoft.NET.Test.Sdk": {
               "target": "Package",

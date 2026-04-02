@@ -104,3 +104,4 @@
 /Users/jh30/Desarrollo/consultorIA/tests/AiConsulting.Domain.Tests/obj/Debug/net10.0/AiConsulting.Domain.Tests.pdb
 /Users/jh30/Desarrollo/consultorIA/tests/AiConsulting.Domain.Tests/obj/Debug/net10.0/AiConsulting.Domain.Tests.genruntimeconfig.cache
 /Users/jh30/Desarrollo/consultorIA/tests/AiConsulting.Domain.Tests/obj/Debug/net10.0/ref/AiConsulting.Domain.Tests.dll
+/Users/jh30/Desarrollo/consultorIA/tests/AiConsulting.Domain.Tests/obj/Debug/net10.0/AiConsulting.Domain.Tests.sourcelink.json

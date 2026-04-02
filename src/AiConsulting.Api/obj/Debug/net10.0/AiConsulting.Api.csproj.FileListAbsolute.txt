@@ -57,3 +57,4 @@
 /Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Api/bin/Debug/net10.0/Swashbuckle.AspNetCore.Swagger.dll
 /Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Api/bin/Debug/net10.0/Swashbuckle.AspNetCore.SwaggerGen.dll
 /Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Api/bin/Debug/net10.0/Swashbuckle.AspNetCore.SwaggerUI.dll
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Api/obj/Debug/net10.0/AiConsulting.Api.sourcelink.json

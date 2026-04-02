@@ -724,6 +724,268 @@ erDiagram
 | IsConfirmed | bool | Confirmada |
 | CreatedAt | DateTime | Fecha de creación |
 
+### 15. Estrategia de Migraciones en Producción (Req. 12)
+
+Estrategia para aplicar migraciones de EF Core en producción de forma segura, auditable y sin riesgo de pérdida de datos.
+
+**Principios:**
+- Nunca ejecutar `Database.Migrate()` ni `Database.EnsureCreated()` en producción
+- Siempre generar un Script SQL revisable antes de aplicar cambios de esquema
+- Registrar cada migración aplicada en un log auditable
+
+**Flujo de Migración en Producción:**
+
+```mermaid
+flowchart TD
+    A[Nueva migración EF Core en desarrollo] --> B[Generar Script SQL<br/>dotnet ef migrations script]
+    B --> C[Revisión manual del Script SQL]
+    C --> D{¿Operaciones destructivas?}
+    D -->|Sí| E[Ejecutar Backup PostgreSQL]
+    D -->|No| F[Aplicar Script SQL en producción<br/>psql -f migration.sql]
+    E --> F
+    F --> G[Registrar migración en log<br/>MigrationLog: fecha, nombre, resultado]
+    G --> H{¿Error?}
+    H -->|Sí| I[Ejecutar procedimiento de rollback]
+    H -->|No| J[Verificar salud del sistema]
+```
+
+**Generación de Script SQL:**
+
+```bash
+# Generar script SQL desde la última migración aplicada
+dotnet ef migrations script <MigraciónAnterior> <MigraciónNueva> \
+  --project src/AiConsulting.Infrastructure \
+  --startup-project src/AiConsulting.Api \
+  --output migrations/YYYYMMDD_NombreMigración.sql \
+  --idempotent
+```
+
+**Detección de Operaciones Destructivas:**
+
+El consultor debe revisar el script SQL buscando operaciones destructivas antes de aplicarlo:
+- `DROP TABLE` — eliminación de tablas
+- `DROP COLUMN` / `ALTER TABLE ... DROP` — eliminación de columnas
+- `TRUNCATE` — vaciado de tablas
+
+Si se detectan operaciones destructivas, es obligatorio ejecutar un backup previo.
+
+**Modelo de Datos — MigrationLog:**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| Id | Guid | Identificador único |
+| MigrationName | string (300) | Nombre de la migración aplicada |
+| ScriptFileName | string (500) | Nombre del archivo SQL aplicado |
+| AppliedAt | DateTime | Fecha y hora de aplicación |
+| AppliedBy | string (200) | Identificador del operador |
+| Result | MigrationResult | Resultado (Success, Failed, RolledBack) |
+| Notes | string (2000)? | Notas adicionales o mensaje de error |
+
+**Enum MigrationResult:** `Success`, `Failed`, `RolledBack`
+
+**Interfaz del servicio:**
+
+```csharp
+public interface IMigrationLogService
+{
+    Task<MigrationLogDto> RecordMigrationAsync(RecordMigrationDto dto);
+    Task<IReadOnlyList<MigrationLogDto>> GetMigrationHistoryAsync();
+    Task<MigrationLogDto> UpdateMigrationResultAsync(Guid id, MigrationResult result, string? notes);
+}
+```
+
+**Endpoints API:**
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| POST | `/api/migrations/log` | Registrar migración aplicada |
+| GET | `/api/migrations/log` | Historial de migraciones |
+| PATCH | `/api/migrations/log/{id}` | Actualizar resultado de migración |
+
+**Procedimiento de Rollback:**
+
+1. Identificar la migración que causó el error
+2. Si hay backup disponible, restaurar desde el backup
+3. Si no hay backup, generar script de rollback: `dotnet ef migrations script <MigraciónNueva> <MigraciónAnterior> --idempotent`
+4. Revisar y aplicar el script de rollback manualmente
+5. Registrar el rollback en el MigrationLog con resultado `RolledBack`
+
+**Protección en Program.cs:**
+
+```csharp
+// PROHIBIDO en producción: NO incluir Database.Migrate() ni EnsureCreated()
+// Las migraciones se aplican SOLO mediante Script SQL revisado manualmente
+if (app.Environment.IsDevelopment())
+{
+    // Solo en desarrollo se permite seed automático (sin migraciones automáticas)
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<AiConsultingDbContext>();
+    await SeedData.SeedAsync(dbContext);
+}
+```
+
+### 16. Documentación de Despliegue (Req. 13)
+
+Diseño de la documentación operativa para llevar la plataforma a producción de forma reproducible y segura.
+
+**Estructura de la Documentación:**
+
+La documentación de despliegue se organiza como un documento Markdown (`docs/DEPLOYMENT.md`) con las siguientes secciones:
+
+**16.1 Infraestructura Mínima:**
+
+| Componente | Requisito Mínimo |
+|---|---|
+| Servidor | VPS con 2 vCPU, 4 GB RAM, 40 GB SSD |
+| Sistema Operativo | Ubuntu 22.04 LTS o superior |
+| Runtime | .NET 10 SDK/Runtime |
+| Base de Datos | PostgreSQL 15+ |
+| Reverse Proxy | nginx 1.24+ o Caddy 2.7+ |
+| Dominio | Dominio propio con certificado SSL (Let's Encrypt) |
+
+**16.2 Variables de Entorno Requeridas:**
+
+| Variable | Descripción | Ejemplo |
+|---|---|---|
+| `ConnectionStrings__DefaultConnection` | Cadena de conexión PostgreSQL | `Host=localhost;Database=aiconsulting_prod;Username=...;Password=...` |
+| `Jwt__Key` | Clave secreta JWT (mín. 32 caracteres) | `clave-secreta-produccion-min-32-chars` |
+| `Jwt__Issuer` | Emisor del token JWT | `AiConsulting.Api` |
+| `Jwt__Audience` | Audiencia del token JWT | `AiConsulting.Client` |
+| `Jwt__ExpiryMinutes` | Tiempo de expiración del token | `60` |
+| `Webhooks__SlackUrl` | URL del webhook de Slack (opcional) | `https://hooks.slack.com/...` |
+| `Webhooks__TelegramUrl` | URL del webhook de Telegram (opcional) | `https://api.telegram.org/...` |
+| `ASPNETCORE_ENVIRONMENT` | Entorno de ejecución | `Production` |
+| `ASPNETCORE_URLS` | URL de escucha del backend | `http://localhost:5000` |
+| `AllowedCorsOrigins` | Dominio permitido para CORS | `https://midominio.com` |
+
+**Validación de Configuración en Startup:**
+
+```csharp
+// Program.cs — Validación de configuración requerida en producción
+if (!app.Environment.IsDevelopment())
+{
+    var requiredKeys = new[]
+    {
+        "ConnectionStrings:DefaultConnection",
+        "Jwt:Key",
+        "Jwt:Issuer",
+        "Jwt:Audience"
+    };
+
+    foreach (var key in requiredKeys)
+    {
+        if (string.IsNullOrWhiteSpace(builder.Configuration[key]))
+            throw new InvalidOperationException(
+                $"La configuración '{key}' es obligatoria en producción.");
+    }
+}
+```
+
+**16.3 Configuración de Reverse Proxy (nginx):**
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name midominio.com;
+
+    ssl_certificate /etc/letsencrypt/live/midominio.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/midominio.com/privkey.pem;
+
+    location / {
+        proxy_pass http://localhost:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 80;
+    server_name midominio.com;
+    return 301 https://$host$request_uri;
+}
+```
+
+**16.4 Backup PostgreSQL Automatizado:**
+
+```bash
+#!/bin/bash
+# /opt/aiconsulting/backup.sh — Ejecutar diariamente via cron
+BACKUP_DIR="/opt/aiconsulting/backups"
+DB_NAME="aiconsulting_prod"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+BACKUP_FILE="${BACKUP_DIR}/${DB_NAME}_${TIMESTAMP}.sql.gz"
+
+# Crear backup comprimido
+pg_dump -U aiconsulting -h localhost $DB_NAME | gzip > "$BACKUP_FILE"
+
+# Verificar integridad
+if gunzip -t "$BACKUP_FILE" 2>/dev/null; then
+    echo "[$(date)] Backup OK: $BACKUP_FILE" >> /var/log/aiconsulting-backup.log
+else
+    echo "[$(date)] ERROR: Backup corrupto: $BACKUP_FILE" >> /var/log/aiconsulting-backup.log
+    exit 1
+fi
+
+# Retener últimos 30 días
+find "$BACKUP_DIR" -name "*.sql.gz" -mtime +30 -delete
+```
+
+Cron: `0 3 * * * /opt/aiconsulting/backup.sh`
+
+**16.5 Procedimiento de Despliegue Paso a Paso:**
+
+1. **Backup previo**: Ejecutar `backup.sh` manualmente antes del despliegue
+2. **Parar servicio**: `sudo systemctl stop aiconsulting`
+3. **Aplicar migraciones**: Revisar y ejecutar Script SQL si hay cambios de esquema (ver sección 15)
+4. **Desplegar binario**: Copiar nueva versión publicada a `/opt/aiconsulting/app/`
+5. **Iniciar servicio**: `sudo systemctl start aiconsulting`
+6. **Verificar salud**: `curl -f http://localhost:5000/health` — debe devolver HTTP 200
+
+**16.6 CORS Restringido en Producción:**
+
+```csharp
+// Program.cs — CORS diferenciado por entorno
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddCors(options =>
+        options.AddPolicy("BlazorWasm", policy =>
+            policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+}
+else
+{
+    var allowedOrigins = builder.Configuration["AllowedCorsOrigins"]
+        ?? throw new InvalidOperationException("AllowedCorsOrigins es obligatorio en producción.");
+
+    builder.Services.AddCors(options =>
+        options.AddPolicy("BlazorWasm", policy =>
+            policy.WithOrigins(allowedOrigins.Split(','))
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()));
+}
+```
+
+**16.7 Health Check Endpoint:**
+
+```csharp
+// Program.cs
+builder.Services.AddHealthChecks()
+    .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!);
+
+// ...
+app.MapHealthChecks("/health");
+```
+
+**16.8 Procedimiento de Diagnóstico ante Caídas:**
+
+1. Verificar estado del servicio: `sudo systemctl status aiconsulting`
+2. Revisar logs de la aplicación: `journalctl -u aiconsulting --since "1 hour ago"`
+3. Verificar estado de PostgreSQL: `sudo systemctl status postgresql` y `pg_isready`
+4. Verificar conectividad del reverse proxy: `sudo nginx -t` y `curl -I https://midominio.com`
+5. Verificar espacio en disco: `df -h`
+6. Si el servicio no responde, reiniciar: `sudo systemctl restart aiconsulting`
+
 ## Propiedades de Corrección
 
 *Una propiedad es una característica o comportamiento que debe cumplirse en todas las ejecuciones válidas de un sistema — esencialmente, una declaración formal sobre lo que el sistema debe hacer. Las propiedades sirven como puente entre especificaciones legibles por humanos y garantías de corrección verificables por máquinas.*
@@ -914,6 +1176,36 @@ erDiagram
 
 **Valida: Requisito 11.4**
 
+### Propiedad 32: Prohibición de migraciones automáticas en producción
+
+*Para cualquier* configuración de entorno de producción, al iniciar la aplicación, el pipeline de startup no debe ejecutar `Database.Migrate()` ni `Database.EnsureCreated()`. Solo en entorno de desarrollo se permite la ejecución de seed automático.
+
+**Valida: Requisito 12.2**
+
+### Propiedad 33: Detección de operaciones destructivas en scripts SQL
+
+*Para cualquier* script SQL de migración que contenga sentencias `DROP TABLE`, `DROP COLUMN` o `TRUNCATE`, el analizador de scripts debe identificarlas como operaciones destructivas y señalar que se requiere un backup previo.
+
+**Valida: Requisito 12.5**
+
+### Propiedad 34: Round-trip de registro de migraciones
+
+*Para cualquier* migración registrada con nombre, fecha y resultado válidos, al consultarla en el historial de migraciones, los datos devueltos deben coincidir con los registrados, incluyendo nombre de migración, fecha de aplicación y resultado.
+
+**Valida: Requisito 12.6**
+
+### Propiedad 35: Validación de configuración requerida en producción
+
+*Para cualquier* configuración de producción a la que le falte alguna de las claves obligatorias (ConnectionStrings:DefaultConnection, Jwt:Key, Jwt:Issuer, Jwt:Audience), el inicio de la aplicación debe fallar con un error claro indicando la clave faltante. Si todas las claves están presentes, el inicio debe completarse correctamente.
+
+**Valida: Requisito 13.2**
+
+### Propiedad 36: CORS restringido en producción
+
+*Para cualquier* configuración de entorno de producción, la política CORS no debe permitir cualquier origen (`AllowAnyOrigin`). Debe estar restringida a los dominios especificados en la configuración `AllowedCorsOrigins`.
+
+**Valida: Requisito 13.6**
+
 ## Manejo de Errores
 
 ### Estrategia General
@@ -958,6 +1250,7 @@ El sistema utiliza un enfoque consistente de manejo de errores basado en Result 
 - **ServiceTranslation**: ServiceId, LanguageCode, Name y Description son obligatorios. LanguageCode debe ser un código ISO válido soportado.
 - **BookingSlot**: VisitorName, VisitorEmail y VisitorCompany son obligatorios. El slot debe estar disponible (no reservado previamente).
 - **NotificationConfig**: Channel y WebhookUrl son obligatorios. WebhookUrl debe ser una URL válida.
+- **MigrationLog**: MigrationName y ScriptFileName son obligatorios. Result debe ser un valor válido del enum MigrationResult.
 
 ### Manejo de Fallos Externos
 
@@ -1031,4 +1324,4 @@ tests/
 
 ### Cobertura de Propiedades
 
-Cada una de las 31 propiedades de corrección se implementa como un test PBT individual en `AiConsulting.Properties.Tests`. Los tests unitarios complementan cubriendo los ejemplos específicos y edge cases identificados en los requisitos que no son propiedades universales (criterios 2.1, 4.1, 4.3, 6.1, 8.2, 8.4, 11.1, 11.6).
+Cada una de las 36 propiedades de corrección se implementa como un test PBT individual en `AiConsulting.Properties.Tests`. Los tests unitarios complementan cubriendo los ejemplos específicos y edge cases identificados en los requisitos que no son propiedades universales (criterios 2.1, 4.1, 4.3, 6.1, 8.2, 8.4, 11.1, 11.6, 13.5).

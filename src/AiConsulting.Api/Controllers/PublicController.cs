@@ -11,28 +11,35 @@ namespace AiConsulting.Api.Controllers;
 public class PublicController : ControllerBase
 {
     private readonly IPublicPortalService _publicPortalService;
+    private readonly ILocalizationService _localizationService;
     private readonly IValidator<ContactRequestDto> _contactValidator;
 
-    public PublicController(IPublicPortalService publicPortalService, IValidator<ContactRequestDto> contactValidator)
+    public PublicController(
+        IPublicPortalService publicPortalService,
+        ILocalizationService localizationService,
+        IValidator<ContactRequestDto> contactValidator)
     {
         _publicPortalService = publicPortalService;
+        _localizationService = localizationService;
         _contactValidator = contactValidator;
     }
 
     [HttpGet("services")]
     [ProducesResponseType(typeof(IReadOnlyList<ServiceSummaryDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetServices()
+    public async Task<IActionResult> GetServices([FromQuery] string? lang)
     {
-        var services = await _publicPortalService.GetActiveServicesAsync();
+        var languageCode = ResolveLanguage(lang);
+        var services = await _localizationService.GetLocalizedServicesAsync(languageCode);
         return Ok(services);
     }
 
     [HttpGet("services/{id:guid}")]
     [ProducesResponseType(typeof(ServiceDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetServiceById(Guid id)
+    public async Task<IActionResult> GetServiceById(Guid id, [FromQuery] string? lang)
     {
-        var service = await _publicPortalService.GetServiceByIdAsync(id);
+        var languageCode = ResolveLanguage(lang);
+        var service = await _localizationService.GetLocalizedServiceAsync(id, languageCode);
         if (service is null)
             return NotFound();
 
@@ -73,5 +80,26 @@ public class PublicController : ControllerBase
 
         var result = await _publicPortalService.SubmitContactRequestAsync(dto);
         return CreatedAtAction(nameof(GetServiceById), new { id = result.Id }, result);
+    }
+
+    /// <summary>
+    /// Resuelve el idioma según la cadena de prioridad:
+    /// query string → Accept-Language header → fallback español
+    /// </summary>
+    private string ResolveLanguage(string? queryLang)
+    {
+        if (!string.IsNullOrWhiteSpace(queryLang))
+            return queryLang.ToLowerInvariant().Split('-')[0]; // "en-US" → "en"
+
+        var acceptLanguage = Request.Headers.AcceptLanguage.FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(acceptLanguage))
+        {
+            // "en-US,en;q=0.9,es;q=0.8" → "en"
+            var primary = acceptLanguage.Split(',')[0].Trim().Split(';')[0].Trim();
+            if (!string.IsNullOrWhiteSpace(primary))
+                return primary.ToLowerInvariant().Split('-')[0];
+        }
+
+        return "es"; // fallback español
     }
 }

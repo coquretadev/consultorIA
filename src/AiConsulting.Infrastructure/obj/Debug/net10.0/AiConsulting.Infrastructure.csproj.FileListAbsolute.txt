@@ -15,3 +15,4 @@
 /Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/obj/Debug/net10.0/refint/AiConsulting.Infrastructure.dll
 /Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/obj/Debug/net10.0/AiConsulting.Infrastructure.pdb
 /Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/obj/Debug/net10.0/ref/AiConsulting.Infrastructure.dll
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/obj/Debug/net10.0/AiConsulting.Infrastructure.sourcelink.json

@@ -13,3 +13,4 @@
 /Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/obj/Debug/net10.0/refint/AiConsulting.Application.dll
 /Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/obj/Debug/net10.0/AiConsulting.Application.pdb
 /Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/obj/Debug/net10.0/ref/AiConsulting.Application.dll
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/obj/Debug/net10.0/AiConsulting.Application.sourcelink.json

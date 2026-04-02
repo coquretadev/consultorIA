@@ -2,6 +2,9 @@ using AiConsulting.Application.DTOs.Catalog;
 using AiConsulting.Application.Services;
 using AiConsulting.Domain.Entities;
 using AiConsulting.Domain.Repositories;
+using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace AiConsulting.Infrastructure.Services;
 
@@ -32,6 +35,7 @@ public class CatalogService : ICatalogService
             TargetSector = dto.TargetSector,
             SortOrder = dto.SortOrder,
             IsActive = true,
+            Slug = await GenerateUniqueSlugAsync(dto.Name),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -124,4 +128,48 @@ public class CatalogService : ICatalogService
         IsActive = service.IsActive,
         CreatedAt = service.CreatedAt
     };
+
+    /// <summary>
+    /// Genera un slug URL-safe desde el nombre, normalizando caracteres españoles
+    /// (ñ→n, tildes→sin tilde) y garantizando unicidad con sufijo numérico.
+    /// </summary>
+    private async Task<string> GenerateUniqueSlugAsync(string name)
+    {
+        var baseSlug = Slugify(name);
+        var candidate = baseSlug;
+        var counter = 1;
+
+        var allServices = await _serviceRepository.GetAllAsync();
+        var existingSlugs = allServices.Select(s => s.Slug).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        while (existingSlugs.Contains(candidate))
+            candidate = $"{baseSlug}-{counter++}";
+
+        return candidate;
+    }
+
+    /// <summary>
+    /// Convierte un texto a slug URL-safe: minúsculas, sin tildes, sin caracteres especiales.
+    /// Ejemplo: "Integración APIs IA" → "integracion-apis-ia"
+    /// </summary>
+    internal static string Slugify(string text)
+    {
+        // Normalizar a NFD para separar letras base de diacríticos
+        var normalized = text.Normalize(NormalizationForm.FormD);
+        var sb = new StringBuilder();
+
+        foreach (var c in normalized)
+        {
+            var category = CharUnicodeInfo.GetUnicodeCategory(c);
+            if (category == UnicodeCategory.NonSpacingMark) continue; // eliminar tildes
+            if (c == 'ñ' || c == 'Ñ') { sb.Append('n'); continue; }
+            sb.Append(c);
+        }
+
+        var slug = sb.ToString().Normalize(NormalizationForm.FormC).ToLowerInvariant();
+        slug = Regex.Replace(slug, @"[^a-z0-9\s-]", "");   // solo alfanumérico, espacios y guiones
+        slug = Regex.Replace(slug, @"\s+", "-");             // espacios → guión
+        slug = Regex.Replace(slug, @"-{2,}", "-");           // guiones múltiples → uno
+        return slug.Trim('-');
+    }
 }
