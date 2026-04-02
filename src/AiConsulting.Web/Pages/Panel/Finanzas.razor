@@ -1,0 +1,235 @@
+@page "/panel/finanzas"
+@layout PanelLayout
+@attribute [Authorize]
+@inject IPanelApiService PanelApi
+
+<h4 class="mb-4">Finanzas</h4>
+
+<div class="d-flex align-items-center gap-2 mb-4">
+    <label class="form-label mb-0 small">Mes:</label>
+    <select class="form-select form-select-sm" style="width: auto;" @bind="_month" @bind:after="LoadSummary">
+        @for (int m = 1; m <= 12; m++)
+        {
+            var label = new DateTime(2000, m, 1).ToString("MMMM", new System.Globalization.CultureInfo("es-ES"));
+            <option value="@m">@label</option>
+        }
+    </select>
+    <select class="form-select form-select-sm" style="width: auto;" @bind="_year" @bind:after="LoadSummary">
+        @for (int y = DateTime.Now.Year - 2; y <= DateTime.Now.Year + 1; y++)
+        {
+            <option value="@y">@y</option>
+        }
+    </select>
+</div>
+
+@if (_loadingSummary)
+{
+    <div class="d-flex justify-content-center py-3">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+    </div>
+}
+else if (_summary is not null)
+{
+    @if (_summary.HasNegativeResult)
+    {
+        <div class="alert alert-warning">⚠️ Resultado negativo este mes: los gastos superan los ingresos.</div>
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted small">Ingresos</h6>
+                    <p class="display-6 fw-bold text-success mb-0">@_summary.TotalIncome.ToString("C0", _es)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted small">Gastos</h6>
+                    <p class="display-6 fw-bold text-danger mb-0">@_summary.TotalExpenses.ToString("C0", _es)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted small">Beneficio neto</h6>
+                    <p class="display-6 fw-bold @(_summary.NetProfit < 0 ? "text-danger" : "text-primary") mb-0">
+                        @_summary.NetProfit.ToString("C0", _es)
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Registrar factura</h6>
+                <div class="row g-2">
+                    <div class="col-12">
+                        <input class="form-control form-control-sm" placeholder="ID del proyecto" @bind="_invoice.ProjectId" />
+                    </div>
+                    <div class="col-6">
+                        <input class="form-control form-control-sm" placeholder="Importe (€)" type="number" @bind="_invoice.Amount" />
+                    </div>
+                    <div class="col-6">
+                        <input class="form-control form-control-sm" type="date" @bind="_invoice.Date" />
+                    </div>
+                    <div class="col-12">
+                        <input class="form-control form-control-sm" placeholder="Descripción" @bind="_invoice.Description" />
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-sm mt-2" @onclick="SaveInvoice" disabled="@_savingInvoice">
+                    @if (_savingInvoice) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                    Guardar factura
+                </button>
+                @if (_invoiceSaved) { <span class="text-success small ms-2">✓ Guardado</span> }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">Registrar gasto</h6>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <select class="form-select form-select-sm" @bind="_expense.Category">
+                            <option value="">Categoría *</option>
+                            <option value="Tools">Herramientas</option>
+                            <option value="Training">Formación</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Infrastructure">Infraestructura</option>
+                            <option value="Other">Otros</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <input class="form-control form-control-sm" placeholder="Importe (€)" type="number" @bind="_expense.Amount" />
+                    </div>
+                    <div class="col-6">
+                        <input class="form-control form-control-sm" type="date" @bind="_expense.Date" />
+                    </div>
+                    <div class="col-6">
+                        <input class="form-control form-control-sm" placeholder="Descripción" @bind="_expense.Description" />
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-sm mt-2" @onclick="SaveExpense" disabled="@_savingExpense">
+                    @if (_savingExpense) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                    Guardar gasto
+                </button>
+                @if (_expenseSaved) { <span class="text-success small ms-2">✓ Guardado</span> }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h6 class="card-title">Proyección a 12 meses</h6>
+        @if (_loadingProjection)
+        {
+            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        }
+        else if (_projection?.Months.Any() == true)
+        {
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mes</th>
+                            <th class="text-end">Ingresos</th>
+                            <th class="text-end">Gastos</th>
+                            <th class="text-end">Beneficio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var m in _projection.Months)
+                        {
+                            <tr>
+                                <td>@(new DateTime(m.Year, m.Month, 1).ToString("MMM yyyy", _es))</td>
+                                <td class="text-end text-success">@m.ProjectedIncome.ToString("C0", _es)</td>
+                                <td class="text-end text-danger">@m.ProjectedExpenses.ToString("C0", _es)</td>
+                                <td class="text-end @(m.ProjectedProfit < 0 ? "text-danger" : "text-primary")">
+                                    @m.ProjectedProfit.ToString("C0", _es)
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted small">No hay datos de proyección disponibles.</p>
+        }
+    </div>
+</div>
+
+@code {
+    private static readonly System.Globalization.CultureInfo _es = new("es-ES");
+
+    private MonthlySummaryModel? _summary;
+    private FinancialProjectionModel? _projection;
+    private bool _loadingSummary = true;
+    private bool _loadingProjection = true;
+    private int _month = DateTime.Now.Month;
+    private int _year = DateTime.Now.Year;
+
+    private CreateInvoiceModel _invoice = new();
+    private CreateExpenseModel _expense = new();
+    private bool _savingInvoice;
+    private bool _savingExpense;
+    private bool _invoiceSaved;
+    private bool _expenseSaved;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(LoadSummary(), LoadProjection());
+    }
+
+    private async Task LoadSummary()
+    {
+        _loadingSummary = true;
+        _summary = await PanelApi.GetMonthlySummaryAsync(_year, _month);
+        _loadingSummary = false;
+    }
+
+    private async Task LoadProjection()
+    {
+        _loadingProjection = true;
+        _projection = await PanelApi.GetProjectionAsync();
+        _loadingProjection = false;
+    }
+
+    private async Task SaveInvoice()
+    {
+        if (string.IsNullOrWhiteSpace(_invoice.ProjectId) || _invoice.Amount <= 0) return;
+        _savingInvoice = true;
+        await PanelApi.CreateInvoiceAsync(_invoice);
+        _invoice = new CreateInvoiceModel();
+        _savingInvoice = false;
+        _invoiceSaved = true;
+        await LoadSummary();
+        StateHasChanged();
+        await Task.Delay(2000);
+        _invoiceSaved = false;
+    }
+
+    private async Task SaveExpense()
+    {
+        if (string.IsNullOrWhiteSpace(_expense.Category) || _expense.Amount <= 0) return;
+        _savingExpense = true;
+        await PanelApi.CreateExpenseAsync(_expense);
+        _expense = new CreateExpenseModel();
+        _savingExpense = false;
+        _expenseSaved = true;
+        await LoadSummary();
+        StateHasChanged();
+        await Task.Delay(2000);
+        _expenseSaved = false;
+    }
+}

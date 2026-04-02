@@ -1,0 +1,66 @@
+@page "/panel/login"
+@layout EmptyLayout
+@using AiConsulting.Web.Models.Auth
+@using AiConsulting.Web.Auth
+@inject IAuthApiService AuthApiService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="d-flex justify-content-center align-items-center vh-100 bg-light">
+    <div class="card shadow" style="width: 400px;">
+        <div class="card-body p-4">
+            <h4 class="card-title mb-4 text-center">Panel del Consultor</h4>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <div class="alert alert-danger" role="alert">@_errorMessage</div>
+            }
+
+            <EditForm Model="_loginModel" OnValidSubmit="HandleLogin">
+                <DataAnnotationsValidator />
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <InputText id="email" class="form-control" @bind-Value="_loginModel.Email" type="email" placeholder="correo@ejemplo.com" />
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <InputText id="password" class="form-control" @bind-Value="_loginModel.Password" type="password" placeholder="••••••••" />
+                </div>
+                <button type="submit" class="btn btn-primary w-100" disabled="@_isLoading">
+                    @if (_isLoading)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    }
+                    Iniciar sesión
+                </button>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private readonly LoginModel _loginModel = new();
+    private string? _errorMessage;
+    private bool _isLoading;
+
+    private async Task HandleLogin()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        var result = await AuthApiService.LoginAsync(_loginModel);
+        if (result is not null)
+        {
+            if (AuthStateProvider is JwtAuthStateProvider jwtProvider)
+                jwtProvider.NotifyAuthStateChanged();
+
+            Navigation.NavigateTo("/panel");
+        }
+        else
+        {
+            _errorMessage = "Credenciales incorrectas";
+        }
+
+        _isLoading = false;
+    }
+}

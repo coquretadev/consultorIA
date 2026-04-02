@@ -1,0 +1,61 @@
+@page "/panel"
+@layout PanelLayout
+@attribute [Authorize]
+@inject IPanelApiService PanelApi
+
+<h4 class="mb-4">Dashboard</h4>
+
+@if (_loading)
+{
+    <div class="d-flex justify-content-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>
+}
+else if (_summary is not null)
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Proyectos activos</h6>
+                    <p class="card-text display-6 fw-bold text-primary">@_summary.ActiveProjectsCount</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Ingresos del mes</h6>
+                    <p class="card-text display-6 fw-bold text-success">@_summary.MonthlyIncome.ToString("C0", new System.Globalization.CultureInfo("es-ES"))</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Checklist de formación</h6>
+                    <p class="card-text display-6 fw-bold text-info">@_summary.TrainingProgressPercent%</p>
+                    <div class="progress mt-2" style="height: 8px;">
+                        <div class="progress-bar bg-info" role="progressbar"
+                             style="width: @_summary.TrainingProgressPercent%"
+                             aria-valuenow="@_summary.TrainingProgressPercent"
+                             aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private DashboardSummaryModel? _summary;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _summary = await PanelApi.GetDashboardSummaryAsync();
+        _loading = false;
+    }
+}

@@ -1,0 +1,11 @@
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Domain/bin/Debug/net10.0/AiConsulting.Domain.deps.json
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Domain/bin/Debug/net10.0/AiConsulting.Domain.dll
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Domain/bin/Debug/net10.0/AiConsulting.Domain.pdb
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Domain/obj/Debug/net10.0/AiConsulting.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Domain/obj/Debug/net10.0/AiConsulting.Domain.AssemblyInfoInputs.cache
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Domain/obj/Debug/net10.0/AiConsulting.Domain.AssemblyInfo.cs
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Domain/obj/Debug/net10.0/AiConsulting.Domain.csproj.CoreCompileInputs.cache
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Domain/obj/Debug/net10.0/AiConsulting.Domain.dll
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Domain/obj/Debug/net10.0/refint/AiConsulting.Domain.dll
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Domain/obj/Debug/net10.0/AiConsulting.Domain.pdb
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Domain/obj/Debug/net10.0/ref/AiConsulting.Domain.dll

@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AiConsulting.Api/AiConsulting.Api.csproj" />
+    <Project Path="src/AiConsulting.Application/AiConsulting.Application.csproj" />
+    <Project Path="src/AiConsulting.Domain/AiConsulting.Domain.csproj" />
+    <Project Path="src/AiConsulting.Infrastructure/AiConsulting.Infrastructure.csproj" />
+    <Project Path="src/AiConsulting.Web/AiConsulting.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AiConsulting.Api.Tests/AiConsulting.Api.Tests.csproj" />
+    <Project Path="tests/AiConsulting.Application.Tests/AiConsulting.Application.Tests.csproj" />
+    <Project Path="tests/AiConsulting.Domain.Tests/AiConsulting.Domain.Tests.csproj" />
+    <Project Path="tests/AiConsulting.Properties.Tests/AiConsulting.Properties.Tests.csproj" />
+  </Folder>
+</Solution>

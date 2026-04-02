@@ -1,0 +1,141 @@
+is_global = true
+build_property.EnableAotAnalyzer = 
+build_property.EnableSingleFileAnalyzer = 
+build_property.EnableTrimAnalyzer = false
+build_property.IncludeAllContentForSelfExtract = 
+build_property.VerifyReferenceTrimCompatibility = 
+build_property.VerifyReferenceAotCompatibility = 
+build_property.TargetFramework = net10.0
+build_property.TargetFrameworkIdentifier = .NETCoreApp
+build_property.TargetFrameworkVersion = v10.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = 
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = false
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = browser
+build_property.RootNamespace = AiConsulting.Web
+build_property.RootNamespace = AiConsulting.Web
+build_property.ProjectDir = /Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = false
+build_property.RazorLangVersion = 9.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = /Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 10.0
+build_property.EnableCodeStyleSeverity = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Layout/EmptyLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = TGF5b3V0L0VtcHR5TGF5b3V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Layout/PanelLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = TGF5b3V0L1BhbmVsTGF5b3V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Calendario.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ2FsZW5kYXJpby5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Casos.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ2Fzb3MucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Contacto.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ29udGFjdG8ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Counter.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ291bnRlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Home.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvSG9tZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/NotFound.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTm90Rm91bmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Panel/Analytics.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUGFuZWwvQW5hbHl0aWNzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Panel/Catalogo.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUGFuZWwvQ2F0YWxvZ28ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Panel/Clientes.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUGFuZWwvQ2xpZW50ZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Panel/Configuracion.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUGFuZWwvQ29uZmlndXJhY2lvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Panel/Dashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUGFuZWwvRGFzaGJvYXJkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Panel/Finanzas.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUGFuZWwvRmluYW56YXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Panel/Formacion.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUGFuZWwvRm9ybWFjaW9uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Panel/Login.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUGFuZWwvTG9naW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Panel/Pipeline.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUGFuZWwvUGlwZWxpbmUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Panel/ProjectDetail.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUGFuZWwvUHJvamVjdERldGFpbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Panel/Proyectos.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUGFuZWwvUHJveWVjdG9zLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Panel/RedirectToLogin.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUGFuZWwvUmVkaXJlY3RUb0xvZ2luLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Sectores.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvU2VjdG9yZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Servicios.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvU2VydmljaW9zLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Pages/Weather.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvV2VhdGhlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Layout/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = TGF5b3V0L01haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-y9efl792xv
+
+[/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Web/Layout/NavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = TGF5b3V0L05hdk1lbnUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-xyhl9dwywe

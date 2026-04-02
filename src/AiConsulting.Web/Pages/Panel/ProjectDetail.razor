@@ -1,0 +1,108 @@
+@using AiConsulting.Web.Models.Panel
+
+<div>
+    <button class="btn btn-link btn-sm ps-0 mb-3" @onclick="OnBack">← Volver a proyectos</button>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h5 class="mb-1">@Project.Name</h5>
+                    <span class="text-muted small">@Project.ClientName</span>
+                </div>
+                <span class="badge @StatusBadge(Project.Status) fs-6">@StatusLabel(Project.Status)</span>
+            </div>
+            <div class="mt-3">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Progreso</span>
+                    <span>@Project.ProgressPercentage%</span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar" role="progressbar"
+                         style="width: @Project.ProgressPercentage%"
+                         aria-valuenow="@Project.ProgressPercentage"
+                         aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+            <div class="mt-3 d-flex gap-2 flex-wrap">
+                @if (Project.Status == "Proposal")
+                {
+                    <button class="btn btn-primary btn-sm" @onclick='() => ChangeStatus("InProgress")'>→ Iniciar proyecto</button>
+                }
+                @if (Project.Status == "InProgress")
+                {
+                    <button class="btn btn-success btn-sm" @onclick='() => ChangeStatus("Completed")'>✓ Marcar completado</button>
+                }
+            </div>
+        </div>
+    </div>
+
+    <h6 class="mb-2">Entregables</h6>
+    @if (!Project.Deliverables.Any())
+    {
+        <p class="text-muted small">No hay entregables definidos.</p>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var d in Project.Deliverables)
+            {
+                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-semibold small @(d.IsCompleted ? "text-decoration-line-through text-muted" : "")">@d.Name</div>
+                        @if (!string.IsNullOrEmpty(d.Description))
+                        {
+                            <div class="text-muted" style="font-size: 0.75rem;">@d.Description</div>
+                        }
+                        <div class="text-muted" style="font-size: 0.75rem;">
+                            Horas: @d.LoggedHours / @d.EstimatedHours estimadas
+                        </div>
+                    </div>
+                    <div>
+                        @if (d.IsCompleted)
+                        {
+                            <span class="badge bg-success">Completado</span>
+                        }
+                        else
+                        {
+                            <button class="btn btn-outline-success btn-sm"
+                                    @onclick="() => CompleteDeliverable(d.Id)">
+                                Completar
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public ProjectDetailModel Project { get; set; } = null!;
+    [Parameter] public EventCallback OnBack { get; set; }
+    [Parameter] public EventCallback<string> OnStatusChanged { get; set; }
+    [Parameter] public EventCallback<Guid> OnDeliverableCompleted { get; set; }
+
+    private async Task ChangeStatus(string newStatus) =>
+        await OnStatusChanged.InvokeAsync(newStatus);
+
+    private async Task CompleteDeliverable(Guid id) =>
+        await OnDeliverableCompleted.InvokeAsync(id);
+
+    private static string StatusBadge(string status) => status switch
+    {
+        "InProgress" => "bg-primary",
+        "Completed" => "bg-success",
+        "Cancelled" => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    private static string StatusLabel(string status) => status switch
+    {
+        "Proposal" => "Propuesta",
+        "InProgress" => "En curso",
+        "Completed" => "Completado",
+        "Cancelled" => "Cancelado",
+        _ => status
+    };
+}

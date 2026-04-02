@@ -1,0 +1,92 @@
+@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IAuthApiService AuthApiService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="d-flex" style="min-height: 100vh;">
+    <!-- Sidebar -->
+    <nav class="d-flex flex-column bg-dark text-white" style="width: 240px; min-height: 100vh;">
+        <div class="p-3 border-bottom border-secondary">
+            <span class="fw-bold fs-5">AI Consulting</span>
+        </div>
+        <ul class="nav flex-column flex-grow-1 p-2">
+            <li class="nav-item">
+                <NavLink class="nav-link text-white-50 px-3 py-2 rounded" href="/panel" Match="NavLinkMatch.All">
+                    <span class="me-2">📊</span> Dashboard
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link text-white-50 px-3 py-2 rounded" href="/panel/clientes">
+                    <span class="me-2">👥</span> Clientes
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link text-white-50 px-3 py-2 rounded" href="/panel/pipeline">
+                    <span class="me-2">🔄</span> Pipeline
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link text-white-50 px-3 py-2 rounded" href="/panel/proyectos">
+                    <span class="me-2">📁</span> Proyectos
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link text-white-50 px-3 py-2 rounded" href="/panel/finanzas">
+                    <span class="me-2">💰</span> Finanzas
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link text-white-50 px-3 py-2 rounded" href="/panel/formacion">
+                    <span class="me-2">🎓</span> Formación
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link text-white-50 px-3 py-2 rounded" href="/panel/catalogo">
+                    <span class="me-2">🛍️</span> Catálogo
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link text-white-50 px-3 py-2 rounded" href="/panel/analytics">
+                    <span class="me-2">📈</span> Analytics
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link text-white-50 px-3 py-2 rounded" href="/panel/configuracion">
+                    <span class="me-2">⚙️</span> Configuración
+                </NavLink>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main content -->
+    <div class="d-flex flex-column flex-grow-1">
+        <!-- Top bar -->
+        <header class="d-flex align-items-center justify-content-between bg-white border-bottom px-4 py-2" style="height: 56px;">
+            <span class="text-muted small">Panel del Consultor</span>
+            <div class="d-flex align-items-center gap-3">
+                <AuthorizeView>
+                    <Authorized>
+                        <span class="text-muted small">@context.User.Identity?.Name</span>
+                    </Authorized>
+                </AuthorizeView>
+                <button class="btn btn-sm btn-outline-secondary" @onclick="HandleLogout">Cerrar sesión</button>
+            </div>
+        </header>
+
+        <!-- Page content -->
+        <main class="flex-grow-1 p-4 bg-light">
+            @Body
+        </main>
+    </div>
+</div>
+
+@code {
+    private async Task HandleLogout()
+    {
+        await AuthApiService.LogoutAsync();
+        if (AuthStateProvider is AiConsulting.Web.Auth.JwtAuthStateProvider jwtProvider)
+            jwtProvider.NotifyAuthStateChanged();
+        Navigation.NavigateTo("/panel/login");
+    }
+}

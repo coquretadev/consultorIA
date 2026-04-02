@@ -1,0 +1,151 @@
+@page "/contacto"
+@inject IPublicApiService ApiService
+
+<PageTitle>Contacto – AI Consulting</PageTitle>
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <h1 class="mb-2">Contacto</h1>
+        <p class="text-muted mb-4">Cuéntanos tu proyecto y te respondemos en menos de 24 horas.</p>
+
+        @if (_success)
+        {
+            <div class="alert alert-success" role="alert">
+                <h5 class="alert-heading">¡Mensaje enviado!</h5>
+                <p class="mb-0">Hemos recibido tu solicitud. Te contactaremos pronto.</p>
+            </div>
+            <button class="btn btn-outline-primary mt-2" @onclick="ResetForm">Enviar otro mensaje</button>
+        }
+        else
+        {
+            @if (_errorMessage != null)
+            {
+                <div class="alert alert-danger" role="alert">@_errorMessage</div>
+            }
+
+            <form @onsubmit="HandleSubmit" novalidate>
+                <!-- Nombre -->
+                <div class="mb-3">
+                    <label for="name" class="form-label">Nombre <span class="text-danger">*</span></label>
+                    <input id="name" type="text" class="form-control @(HasError("Name") ? "is-invalid" : "")"
+                           @bind="_model.Name" @bind:event="oninput" placeholder="Tu nombre completo" />
+                    @if (HasError("Name"))
+                    {
+                        <div class="invalid-feedback">@GetError("Name")</div>
+                    }
+                </div>
+
+                <!-- Email -->
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                    <input id="email" type="email" class="form-control @(HasError("Email") ? "is-invalid" : "")"
+                           @bind="_model.Email" @bind:event="oninput" placeholder="tu@empresa.com" />
+                    @if (HasError("Email"))
+                    {
+                        <div class="invalid-feedback">@GetError("Email")</div>
+                    }
+                </div>
+
+                <!-- Empresa -->
+                <div class="mb-3">
+                    <label for="company" class="form-label">Empresa <span class="text-danger">*</span></label>
+                    <input id="company" type="text" class="form-control @(HasError("Company") ? "is-invalid" : "")"
+                           @bind="_model.Company" @bind:event="oninput" placeholder="Nombre de tu empresa" />
+                    @if (HasError("Company"))
+                    {
+                        <div class="invalid-feedback">@GetError("Company")</div>
+                    }
+                </div>
+
+                <!-- Mensaje -->
+                <div class="mb-4">
+                    <label for="message" class="form-label">Mensaje <span class="text-danger">*</span></label>
+                    <textarea id="message" class="form-control @(HasError("Message") ? "is-invalid" : "")"
+                              rows="4" @bind="_model.Message" @bind:event="oninput"
+                              placeholder="Describe brevemente tu proyecto o necesidad..."></textarea>
+                    @if (HasError("Message"))
+                    {
+                        <div class="invalid-feedback">@GetError("Message")</div>
+                    }
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100" disabled="@_loading">
+                    @if (_loading)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Enviando...</span>
+                    }
+                    else
+                    {
+                        <span>Enviar mensaje</span>
+                    }
+                </button>
+            </form>
+        }
+    </div>
+</div>
+
+@code {
+    private ContactRequestModel _model = new();
+    private Dictionary<string, string> _errors = new();
+    private bool _loading;
+    private bool _success;
+    private string? _errorMessage;
+
+    private async Task HandleSubmit()
+    {
+        _errors.Clear();
+        _errorMessage = null;
+
+        Validate();
+        if (_errors.Count > 0) return;
+
+        _loading = true;
+        try
+        {
+            var result = await ApiService.SubmitContactAsync(_model);
+            if (result != null)
+                _success = true;
+            else
+                _errorMessage = "No se pudo enviar el mensaje. Por favor, inténtalo de nuevo.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void Validate()
+    {
+        if (string.IsNullOrWhiteSpace(_model.Name))
+            _errors["Name"] = "El nombre es obligatorio.";
+
+        if (string.IsNullOrWhiteSpace(_model.Email))
+            _errors["Email"] = "El email es obligatorio.";
+        else if (!IsValidEmail(_model.Email))
+            _errors["Email"] = "Introduce un email válido.";
+
+        if (string.IsNullOrWhiteSpace(_model.Company))
+            _errors["Company"] = "La empresa es obligatoria.";
+
+        if (string.IsNullOrWhiteSpace(_model.Message))
+            _errors["Message"] = "El mensaje es obligatorio.";
+    }
+
+    private static bool IsValidEmail(string email)
+    {
+        try { var addr = new System.Net.Mail.MailAddress(email); return addr.Address == email; }
+        catch { return false; }
+    }
+
+    private bool HasError(string field) => _errors.ContainsKey(field);
+    private string GetError(string field) => _errors.TryGetValue(field, out var msg) ? msg : string.Empty;
+
+    private void ResetForm()
+    {
+        _model = new();
+        _errors.Clear();
+        _errorMessage = null;
+        _success = false;
+    }
+}

@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "API (backend)",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/src/AiConsulting.Api/AiConsulting.Api.csproj",
+      "preLaunchTask": "build-api"
+    },
+    {
+      "name": "Web (Blazor WASM)",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/src/AiConsulting.Web/AiConsulting.Web.csproj",
+      "preLaunchTask": "build-web"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "API + Web (ambos)",
+      "configurations": ["API (backend)", "Web (Blazor WASM)"]
+    }
+  ]
+}

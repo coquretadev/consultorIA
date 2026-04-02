@@ -1,0 +1,222 @@
+@page "/panel/proyectos"
+@layout PanelLayout
+@attribute [Authorize]
+@inject IPanelApiService PanelApi
+
+@if (_selectedProject is not null)
+{
+    <ProjectDetail Project="_selectedProject"
+                   OnBack="() => { _selectedProject = null; }"
+                   OnStatusChanged="HandleStatusChanged"
+                   OnDeliverableCompleted="HandleDeliverableCompleted" />
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">Proyectos</h4>
+        <button class="btn btn-primary btn-sm" @onclick="() => _showForm = !_showForm">+ Nuevo proyecto</button>
+    </div>
+
+    @if (_showForm)
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <h6 class="card-title">Nuevo proyecto</h6>
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <label class="form-label small">Plantilla</label>
+                        <select class="form-select form-select-sm" @bind="_selectedTemplateId">
+                            <option value="">Sin plantilla</option>
+                            @foreach (var t in _templates)
+                            {
+                                <option value="@t.Id">@t.Name (@t.ServiceName)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small">Nombre del proyecto *</label>
+                        <input class="form-control form-control-sm" @bind="_newProject.Name" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small">Nombre del cliente *</label>
+                        <input class="form-control form-control-sm" @bind="_newProject.ClientName" />
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(_formError))
+                {
+                    <div class="alert alert-danger mt-2 py-1 small">@_formError</div>
+                }
+                <div class="mt-2 d-flex gap-2">
+                    <button class="btn btn-primary btn-sm" @onclick="CreateProject" disabled="@_saving">
+                        @if (_saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        Crear
+                    </button>
+                    <button class="btn btn-secondary btn-sm" @onclick="() => _showForm = false">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="mb-3">
+        <select class="form-select form-select-sm" style="max-width: 200px;" @bind="_statusFilter" @bind:after="LoadProjects">
+            <option value="">Todos los estados</option>
+            <option value="Proposal">Propuesta</option>
+            <option value="InProgress">En curso</option>
+            <option value="Completed">Completado</option>
+            <option value="Cancelled">Cancelado</option>
+        </select>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="d-flex justify-content-center py-4">
+            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Cliente</th>
+                        <th>Estado</th>
+                        <th>Progreso</th>
+                        <th>Inicio</th>
+                        <th>Fin</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in _projects.Items)
+                    {
+                        <tr>
+                            <td>@p.Name</td>
+                            <td>@p.ClientName</td>
+                            <td><span class="badge @StatusBadge(p.Status)">@StatusLabel(p.Status)</span></td>
+                            <td style="min-width: 120px;">
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar" role="progressbar"
+                                         style="width: @p.ProgressPercentage%"
+                                         aria-valuenow="@p.ProgressPercentage"
+                                         aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <small class="text-muted">@p.ProgressPercentage%</small>
+                            </td>
+                            <td class="small">@p.StartDate?.ToString("dd/MM/yy")</td>
+                            <td class="small">@p.EndDate?.ToString("dd/MM/yy")</td>
+                            <td>
+                                <button class="btn btn-outline-primary btn-sm" @onclick="() => OpenDetail(p.Id)">Ver</button>
+                            </td>
+                        </tr>
+                    }
+                    @if (!_projects.Items.Any())
+                    {
+                        <tr><td colspan="7" class="text-center text-muted py-3">No hay proyectos</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (_projects.TotalPages > 1)
+        {
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-secondary btn-sm" @onclick="PrevPage" disabled="@(_page <= 1)">‹</button>
+                <span class="small text-muted">Página @_page de @_projects.TotalPages</span>
+                <button class="btn btn-outline-secondary btn-sm" @onclick="NextPage" disabled="@(_page >= _projects.TotalPages)">›</button>
+            </div>
+        }
+    }
+}
+
+@code {
+    private PagedResultModel<ProjectSummaryModel> _projects = new();
+    private List<ProjectTemplateModel> _templates = [];
+    private ProjectDetailModel? _selectedProject;
+    private bool _loading = true;
+    private bool _saving;
+    private bool _showForm;
+    private string _statusFilter = string.Empty;
+    private int _page = 1;
+    private string? _formError;
+    private CreateProjectModel _newProject = new();
+    private string _selectedTemplateId = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _templates = await PanelApi.GetTemplatesAsync();
+        await LoadProjects();
+    }
+
+    private async Task LoadProjects()
+    {
+        _loading = true;
+        _projects = await PanelApi.GetProjectsAsync(_page, string.IsNullOrEmpty(_statusFilter) ? null : _statusFilter);
+        _loading = false;
+    }
+
+    private async Task OpenDetail(Guid id)
+    {
+        _selectedProject = await PanelApi.GetProjectByIdAsync(id);
+    }
+
+    private async Task CreateProject()
+    {
+        if (string.IsNullOrWhiteSpace(_newProject.Name) || string.IsNullOrWhiteSpace(_newProject.ClientName))
+        {
+            _formError = "Nombre del proyecto y cliente son obligatorios.";
+            return;
+        }
+        _saving = true;
+        _formError = null;
+        if (!string.IsNullOrEmpty(_selectedTemplateId) && Guid.TryParse(_selectedTemplateId, out var tid))
+            _newProject.TemplateId = tid;
+        await PanelApi.CreateProjectAsync(_newProject);
+        _newProject = new CreateProjectModel();
+        _selectedTemplateId = string.Empty;
+        _showForm = false;
+        _saving = false;
+        await LoadProjects();
+    }
+
+    private async Task HandleStatusChanged(string newStatus)
+    {
+        if (_selectedProject is null) return;
+        _selectedProject = await PanelApi.UpdateProjectStatusAsync(_selectedProject.Id, newStatus);
+    }
+
+    private async Task HandleDeliverableCompleted(Guid deliverableId)
+    {
+        if (_selectedProject is null) return;
+        var updated = await PanelApi.CompleteDeliverableAsync(_selectedProject.Id, deliverableId);
+        if (updated is not null)
+        {
+            var idx = _selectedProject.Deliverables.FindIndex(d => d.Id == deliverableId);
+            if (idx >= 0) _selectedProject.Deliverables[idx] = updated;
+            _selectedProject = await PanelApi.GetProjectByIdAsync(_selectedProject.Id) ?? _selectedProject;
+        }
+    }
+
+    private async Task PrevPage() { if (_page > 1) { _page--; await LoadProjects(); } }
+    private async Task NextPage() { if (_page < _projects.TotalPages) { _page++; await LoadProjects(); } }
+
+    private static string StatusBadge(string status) => status switch
+    {
+        "InProgress" => "bg-primary",
+        "Completed" => "bg-success",
+        "Cancelled" => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    private static string StatusLabel(string status) => status switch
+    {
+        "Proposal" => "Propuesta",
+        "InProgress" => "En curso",
+        "Completed" => "Completado",
+        "Cancelled" => "Cancelado",
+        _ => status
+    };
+}
+
+

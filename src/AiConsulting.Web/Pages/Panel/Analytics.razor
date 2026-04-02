@@ -1,0 +1,137 @@
+@page "/panel/analytics"
+@layout PanelLayout
+@attribute [Authorize]
+@inject IPanelApiService PanelApi
+
+<h4 class="mb-4">Analytics</h4>
+
+<div class="d-flex align-items-center gap-2 mb-4 flex-wrap">
+    <label class="form-label mb-0 small">Desde:</label>
+    <input class="form-control form-control-sm" style="width: auto;" type="date"
+           @bind="_from" @bind:format="yyyy-MM-dd" />
+    <label class="form-label mb-0 small">Hasta:</label>
+    <input class="form-control form-control-sm" style="width: auto;" type="date"
+           @bind="_to" @bind:format="yyyy-MM-dd" />
+    <button class="btn btn-primary btn-sm" @onclick="LoadData">Aplicar</button>
+</div>
+
+@if (_loading)
+{
+    <div class="d-flex justify-content-center py-4">
+        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
+    </div>
+}
+else if (_summary is not null)
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted small">Visitas totales</h6>
+                    <p class="display-6 fw-bold text-primary mb-0">@_summary.TotalVisits</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted small">Visitantes únicos</h6>
+                    <p class="display-6 fw-bold text-info mb-0">@_summary.UniqueVisitors</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Páginas más vistas</h6>
+                    @if (_summary.TopPages.Any())
+                    {
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>Página</th><th class="text-end">Visitas</th></tr></thead>
+                            <tbody>
+                                @foreach (var p in _summary.TopPages)
+                                {
+                                    <tr>
+                                        <td class="small text-truncate" style="max-width: 150px;">@p.Page</td>
+                                        <td class="text-end small">@p.Visits</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else { <p class="text-muted small">Sin datos</p> }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Servicios más consultados</h6>
+                    @if (_topServices.Any())
+                    {
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>Servicio</th><th class="text-end">Vistas</th></tr></thead>
+                            <tbody>
+                                @foreach (var s in _topServices)
+                                {
+                                    <tr>
+                                        <td class="small">@s.ServiceName</td>
+                                        <td class="text-end small">@s.Views</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else { <p class="text-muted small">Sin datos</p> }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Origen del tráfico</h6>
+                    @if (_summary.TrafficSources.Any())
+                    {
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>Origen</th><th class="text-end">Visitas</th></tr></thead>
+                            <tbody>
+                                @foreach (var t in _summary.TrafficSources)
+                                {
+                                    <tr>
+                                        <td class="small text-truncate" style="max-width: 150px;">@(string.IsNullOrEmpty(t.Source) ? "Directo" : t.Source)</td>
+                                        <td class="text-end small">@t.Visits</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else { <p class="text-muted small">Sin datos</p> }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private AnalyticsSummaryModel? _summary;
+    private List<TopServiceModel> _topServices = [];
+    private bool _loading = true;
+    private DateTime _from = DateTime.Today.AddDays(-30);
+    private DateTime _to = DateTime.Today;
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        var summaryTask = PanelApi.GetAnalyticsSummaryAsync(_from, _to);
+        var topTask = PanelApi.GetTopServicesAsync(_from, _to);
+        await Task.WhenAll(summaryTask, topTask);
+        _summary = await summaryTask;
+        _topServices = await topTask;
+        _loading = false;
+    }
+}

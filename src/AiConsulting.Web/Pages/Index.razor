@@ -1,0 +1,88 @@
+@page "/"
+@inject IPublicApiService ApiService
+
+<PageTitle>Consultoría de Integración de IA</PageTitle>
+
+<!-- Hero -->
+<section class="py-5 text-center bg-dark text-white rounded mb-4">
+    <div class="py-3">
+        <h1 class="display-5 fw-bold">Consultoría de Integración de IA</h1>
+        <p class="lead col-md-8 mx-auto">Conectamos APIs de inteligencia artificial con tus sistemas empresariales para automatizar procesos y multiplicar la productividad.</p>
+        <a href="/servicios" class="btn btn-primary btn-lg mt-2">Ver servicios</a>
+    </div>
+</section>
+
+<!-- Preview servicios -->
+<section class="mb-5">
+    <h2 class="mb-4">Servicios destacados</h2>
+    @if (_services == null)
+    {
+        <div class="text-center py-4"><div class="spinner-border" role="status"><span class="visually-hidden">Cargando...</span></div></div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var s in _services.Take(3))
+            {
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">@s.Name</h5>
+                            <p class="card-text text-muted">@s.Description</p>
+                            <p class="fw-semibold text-primary">€@s.PriceRangeMin.ToString("N0") – €@s.PriceRangeMax.ToString("N0")</p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="text-center mt-4">
+            <a href="/servicios" class="btn btn-outline-primary">Ver todos los servicios</a>
+        </div>
+    }
+</section>
+
+<!-- Sectores -->
+<section class="mb-5">
+    <h2 class="mb-4">Sectores objetivo</h2>
+    @if (_sectors == null)
+    {
+        <div class="text-center py-4"><div class="spinner-border" role="status"><span class="visually-hidden">Cargando...</span></div></div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var sector in _sectors.Take(4))
+            {
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card h-100 border-0 bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title fw-bold">@sector.Name</h6>
+                            <p class="card-text small text-muted">@sector.Description</p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>
+
+<!-- CTA final -->
+<section class="py-5 text-center bg-primary text-white rounded">
+    <h2 class="mb-3">¿Listo para integrar IA en tu negocio?</h2>
+    <p class="lead mb-4">Cuéntanos tu caso y te preparamos una propuesta personalizada.</p>
+    <a href="/contacto" class="btn btn-light btn-lg">Contactar ahora</a>
+</section>
+
+@code {
+    private List<ServiceSummaryModel>? _services;
+    private List<SectorModel>? _sectors;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var servicesTask = ApiService.GetServicesAsync();
+        var sectorsTask = ApiService.GetSectorsAsync();
+        await Task.WhenAll(servicesTask, sectorsTask);
+        _services = servicesTask.Result;
+        _sectors = sectorsTask.Result;
+    }
+}

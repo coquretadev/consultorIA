@@ -1,0 +1,207 @@
+@page "/panel/clientes"
+@layout PanelLayout
+@attribute [Authorize]
+@inject IPanelApiService PanelApi
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Clientes</h4>
+    <button class="btn btn-primary btn-sm" @onclick="ShowNewForm">+ Nuevo cliente</button>
+</div>
+
+@if (_showForm)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h6 class="card-title">@(_editingId.HasValue ? "Editar cliente" : "Nuevo cliente")</h6>
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <input class="form-control form-control-sm" placeholder="Nombre *" @bind="_form.Name" />
+                </div>
+                <div class="col-md-4">
+                    <input class="form-control form-control-sm" placeholder="Empresa" @bind="_form.Company" />
+                </div>
+                <div class="col-md-4">
+                    <input class="form-control form-control-sm" placeholder="Sector" @bind="_form.Sector" />
+                </div>
+                <div class="col-md-4">
+                    <input class="form-control form-control-sm" placeholder="Email *" type="email" @bind="_form.Email" />
+                </div>
+                <div class="col-md-4">
+                    <input class="form-control form-control-sm" placeholder="Teléfono" @bind="_form.Phone" />
+                </div>
+                <div class="col-md-4">
+                    <input class="form-control form-control-sm" placeholder="Notas" @bind="_form.Notes" />
+                </div>
+            </div>
+            @if (!string.IsNullOrEmpty(_formError))
+            {
+                <div class="alert alert-danger mt-2 py-1 small">@_formError</div>
+            }
+            <div class="mt-2 d-flex gap-2">
+                <button class="btn btn-primary btn-sm" @onclick="SaveClient" disabled="@_saving">
+                    @if (_saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                    Guardar
+                </button>
+                <button class="btn btn-secondary btn-sm" @onclick="CancelForm">Cancelar</button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="d-flex gap-2 mb-3">
+    <input class="form-control form-control-sm" style="max-width: 300px;"
+           placeholder="Buscar por nombre o empresa..."
+           @bind="_search" @bind:event="oninput" @onkeyup="OnSearchKeyUp" />
+    <button class="btn btn-outline-secondary btn-sm" @onclick="LoadClients">Buscar</button>
+</div>
+
+@if (_loading)
+{
+    <div class="d-flex justify-content-center py-4">
+        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Nombre</th>
+                    <th>Empresa</th>
+                    <th>Sector</th>
+                    <th>Email</th>
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in _clients.Items)
+                {
+                    <tr>
+                        <td>@c.Name</td>
+                        <td>@c.Company</td>
+                        <td>@c.Sector</td>
+                        <td>@c.Email</td>
+                        <td>
+                            <span class="badge @(c.IsArchived ? "bg-secondary" : "bg-success")">
+                                @(c.IsArchived ? "Archivado" : "Activo")
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-outline-primary btn-sm me-1" @onclick="() => EditClient(c)">Editar</button>
+                            @if (!c.IsArchived)
+                            {
+                                <button class="btn btn-outline-secondary btn-sm" @onclick="() => ArchiveClient(c.Id)">Archivar</button>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (!_clients.Items.Any())
+                {
+                    <tr><td colspan="6" class="text-center text-muted py-3">No hay clientes</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (_clients.TotalPages > 1)
+    {
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary btn-sm" @onclick="PrevPage" disabled="@(_page <= 1)">‹</button>
+            <span class="small text-muted">Página @_page de @_clients.TotalPages</span>
+            <button class="btn btn-outline-secondary btn-sm" @onclick="NextPage" disabled="@(_page >= _clients.TotalPages)">›</button>
+        </div>
+    }
+}
+
+@code {
+    private PagedResultModel<ClientModel> _clients = new();
+    private bool _loading = true;
+    private bool _saving;
+    private bool _showForm;
+    private Guid? _editingId;
+    private string _search = string.Empty;
+    private int _page = 1;
+    private string? _formError;
+
+    private CreateClientModel _form = new();
+
+    protected override async Task OnInitializedAsync() => await LoadClients();
+
+    private async Task LoadClients()
+    {
+        _loading = true;
+        _clients = await PanelApi.GetClientsAsync(_page, _search);
+        _loading = false;
+    }
+
+    private void ShowNewForm()
+    {
+        _editingId = null;
+        _form = new CreateClientModel();
+        _formError = null;
+        _showForm = true;
+    }
+
+    private void EditClient(ClientModel c)
+    {
+        _editingId = c.Id;
+        _form = new CreateClientModel
+        {
+            Name = c.Name, Company = c.Company, Sector = c.Sector,
+            Email = c.Email, Phone = c.Phone, Notes = c.Notes
+        };
+        _formError = null;
+        _showForm = true;
+    }
+
+    private void CancelForm()
+    {
+        _showForm = false;
+        _editingId = null;
+    }
+
+    private async Task SaveClient()
+    {
+        if (string.IsNullOrWhiteSpace(_form.Name) || string.IsNullOrWhiteSpace(_form.Email))
+        {
+            _formError = "Nombre y email son obligatorios.";
+            return;
+        }
+        _saving = true;
+        _formError = null;
+
+        if (_editingId.HasValue)
+        {
+            var update = new UpdateClientModel
+            {
+                Name = _form.Name, Company = _form.Company, Sector = _form.Sector,
+                Email = _form.Email, Phone = _form.Phone, Notes = _form.Notes
+            };
+            await PanelApi.UpdateClientAsync(_editingId.Value, update);
+        }
+        else
+        {
+            await PanelApi.CreateClientAsync(_form);
+        }
+
+        _saving = false;
+        _showForm = false;
+        await LoadClients();
+    }
+
+    private async Task ArchiveClient(Guid id)
+    {
+        await PanelApi.ArchiveClientAsync(id);
+        await LoadClients();
+    }
+
+    private async Task OnSearchKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await LoadClients();
+    }
+
+    private async Task PrevPage() { if (_page > 1) { _page--; await LoadClients(); } }
+    private async Task NextPage() { if (_page < _clients.TotalPages) { _page++; await LoadClients(); } }
+}

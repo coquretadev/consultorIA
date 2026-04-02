@@ -1,0 +1,15 @@
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/bin/Debug/net10.0/AiConsulting.Application.deps.json
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/bin/Debug/net10.0/AiConsulting.Application.dll
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/bin/Debug/net10.0/AiConsulting.Application.pdb
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/bin/Debug/net10.0/AiConsulting.Domain.dll
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/bin/Debug/net10.0/AiConsulting.Domain.pdb
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/obj/Debug/net10.0/AiConsulting.Application.csproj.AssemblyReference.cache
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/obj/Debug/net10.0/AiConsulting.Application.GeneratedMSBuildEditorConfig.editorconfig
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/obj/Debug/net10.0/AiConsulting.Application.AssemblyInfoInputs.cache
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/obj/Debug/net10.0/AiConsulting.Application.AssemblyInfo.cs
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/obj/Debug/net10.0/AiConsulting.Application.csproj.CoreCompileInputs.cache
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/obj/Debug/net10.0/AiConsul.500B80C8.Up2Date
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/obj/Debug/net10.0/AiConsulting.Application.dll
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/obj/Debug/net10.0/refint/AiConsulting.Application.dll
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/obj/Debug/net10.0/AiConsulting.Application.pdb
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Application/obj/Debug/net10.0/ref/AiConsulting.Application.dll

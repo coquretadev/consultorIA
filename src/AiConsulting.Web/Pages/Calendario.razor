@@ -1,0 +1,265 @@
+@page "/calendario"
+@inject IPublicApiService ApiService
+
+<PageTitle>Reservar llamada – AI Consulting</PageTitle>
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <h1 class="mb-2">Reservar llamada</h1>
+        <p class="text-muted mb-4">Selecciona una fecha y horario para hablar con nuestro consultor.</p>
+
+        @if (_step == Step.Confirmation)
+        {
+            <div class="alert alert-success" role="alert">
+                <h5 class="alert-heading">¡Reserva confirmada!</h5>
+                <p class="mb-1">Tu llamada ha sido reservada para el <strong>@_confirmedDate</strong> a las <strong>@_confirmedTime</strong>.</p>
+                <p class="mb-0">Recibirás un email de confirmación en breve.</p>
+            </div>
+            <button class="btn btn-outline-primary mt-2" @onclick="ResetAll">Hacer otra reserva</button>
+        }
+        else
+        {
+            <!-- Step 1: Date and slot selection -->
+            <div class="mb-4">
+                <label for="datePicker" class="form-label fw-semibold">1. Selecciona una fecha</label>
+                <input id="datePicker" type="date"
+                       class="form-control"
+                       min="@_minDate"
+                       max="@_maxDate"
+                       value="@_selectedDateStr"
+                       @onchange="OnDateChanged" />
+            </div>
+
+            @if (_loadingSlots)
+            {
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span>Cargando horarios disponibles...</span>
+                </div>
+            }
+            else if (_slotsLoaded && _slots.Count == 0)
+            {
+                <div class="alert alert-warning" role="alert">
+                    No hay horarios disponibles para esta fecha. Por favor, selecciona otro día.
+                </div>
+            }
+            else if (_slots.Count > 0)
+            {
+                <div class="mb-4">
+                    <p class="fw-semibold mb-2">2. Selecciona un horario</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var slot in _slots)
+                        {
+                            var isSelected = _selectedSlot == slot;
+                            <button type="button"
+                                    class="btn @(isSelected ? "btn-primary" : "btn-outline-secondary")"
+                                    @onclick="() => SelectSlot(slot)">
+                                @slot.StartTime.ToString("HH:mm") – @slot.EndTime.ToString("HH:mm")
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Step 2: Booking form -->
+            @if (_step == Step.BookingForm && _selectedSlot != null)
+            {
+                @if (_slotTakenError)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        Este horario ya no está disponible. Por favor, selecciona otro.
+                    </div>
+                }
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">3. Tus datos</h5>
+
+                        <div class="mb-2 text-muted small">
+                            <strong>Fecha:</strong> @_selectedDate?.ToString("dd/MM/yyyy") &nbsp;
+                            <strong>Hora:</strong> @_selectedSlot.StartTime.ToString("HH:mm") – @_selectedSlot.EndTime.ToString("HH:mm")
+                        </div>
+
+                        <form @onsubmit="HandleBooking" novalidate>
+                            <div class="mb-3">
+                                <label for="visitorName" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                <input id="visitorName" type="text"
+                                       class="form-control @(HasError("Name") ? "is-invalid" : "")"
+                                       @bind="_booking.VisitorName" @bind:event="oninput"
+                                       placeholder="Tu nombre completo" />
+                                @if (HasError("Name"))
+                                {
+                                    <div class="invalid-feedback">@GetError("Name")</div>
+                                }
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="visitorEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                                <input id="visitorEmail" type="email"
+                                       class="form-control @(HasError("Email") ? "is-invalid" : "")"
+                                       @bind="_booking.VisitorEmail" @bind:event="oninput"
+                                       placeholder="tu@empresa.com" />
+                                @if (HasError("Email"))
+                                {
+                                    <div class="invalid-feedback">@GetError("Email")</div>
+                                }
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="visitorCompany" class="form-label">Empresa <span class="text-danger">*</span></label>
+                                <input id="visitorCompany" type="text"
+                                       class="form-control @(HasError("Company") ? "is-invalid" : "")"
+                                       @bind="_booking.VisitorCompany" @bind:event="oninput"
+                                       placeholder="Nombre de tu empresa" />
+                                @if (HasError("Company"))
+                                {
+                                    <div class="invalid-feedback">@GetError("Company")</div>
+                                }
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100" disabled="@_loadingBooking">
+                                @if (_loadingBooking)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Reservando...</span>
+                                }
+                                else
+                                {
+                                    <span>Confirmar reserva</span>
+                                }
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private enum Step { DateSlotSelection, BookingForm, Confirmation }
+
+    private Step _step = Step.DateSlotSelection;
+    private string _minDate = DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd");
+    private string _maxDate = DateOnly.FromDateTime(DateTime.Today.AddDays(60)).ToString("yyyy-MM-dd");
+
+    private string _selectedDateStr = string.Empty;
+    private DateOnly? _selectedDate;
+    private List<AvailableSlotModel> _slots = [];
+    private AvailableSlotModel? _selectedSlot;
+    private bool _loadingSlots;
+    private bool _slotsLoaded;
+
+    private BookSlotModel _booking = new();
+    private Dictionary<string, string> _errors = new();
+    private bool _loadingBooking;
+    private bool _slotTakenError;
+
+    private string _confirmedDate = string.Empty;
+    private string _confirmedTime = string.Empty;
+
+    private async Task OnDateChanged(ChangeEventArgs e)
+    {
+        _selectedDateStr = e.Value?.ToString() ?? string.Empty;
+        _selectedSlot = null;
+        _slots = [];
+        _slotsLoaded = false;
+        _step = Step.DateSlotSelection;
+        _slotTakenError = false;
+
+        if (DateOnly.TryParse(_selectedDateStr, out var date))
+        {
+            _selectedDate = date;
+            _loadingSlots = true;
+            StateHasChanged();
+            _slots = await ApiService.GetAvailableSlotsAsync(date);
+            _loadingSlots = false;
+            _slotsLoaded = true;
+        }
+    }
+
+    private void SelectSlot(AvailableSlotModel slot)
+    {
+        _selectedSlot = slot;
+        _slotTakenError = false;
+        _errors.Clear();
+        _booking = new BookSlotModel
+        {
+            Date = _selectedDate!.Value,
+            StartTime = slot.StartTime
+        };
+        _step = Step.BookingForm;
+    }
+
+    private async Task HandleBooking()
+    {
+        _errors.Clear();
+        _slotTakenError = false;
+
+        Validate();
+        if (_errors.Count > 0) return;
+
+        _loadingBooking = true;
+        try
+        {
+            var result = await ApiService.BookSlotAsync(_booking);
+            if (result == null || !result.Success)
+            {
+                _slotTakenError = true;
+                _step = Step.DateSlotSelection;
+                // Reload slots for the same date
+                if (_selectedDate.HasValue)
+                {
+                    _slots = await ApiService.GetAvailableSlotsAsync(_selectedDate.Value);
+                }
+                _selectedSlot = null;
+            }
+            else
+            {
+                _confirmedDate = _selectedDate!.Value.ToString("dd/MM/yyyy");
+                _confirmedTime = $"{_selectedSlot!.StartTime:HH:mm} – {_selectedSlot.EndTime:HH:mm}";
+                _step = Step.Confirmation;
+            }
+        }
+        finally
+        {
+            _loadingBooking = false;
+        }
+    }
+
+    private void Validate()
+    {
+        if (string.IsNullOrWhiteSpace(_booking.VisitorName))
+            _errors["Name"] = "El nombre es obligatorio.";
+
+        if (string.IsNullOrWhiteSpace(_booking.VisitorEmail))
+            _errors["Email"] = "El email es obligatorio.";
+        else if (!IsValidEmail(_booking.VisitorEmail))
+            _errors["Email"] = "Introduce un email válido.";
+
+        if (string.IsNullOrWhiteSpace(_booking.VisitorCompany))
+            _errors["Company"] = "La empresa es obligatoria.";
+    }
+
+    private static bool IsValidEmail(string email)
+    {
+        try { var addr = new System.Net.Mail.MailAddress(email); return addr.Address == email; }
+        catch { return false; }
+    }
+
+    private bool HasError(string field) => _errors.ContainsKey(field);
+    private string GetError(string field) => _errors.TryGetValue(field, out var msg) ? msg : string.Empty;
+
+    private void ResetAll()
+    {
+        _step = Step.DateSlotSelection;
+        _selectedDateStr = string.Empty;
+        _selectedDate = null;
+        _slots = [];
+        _selectedSlot = null;
+        _slotsLoaded = false;
+        _slotTakenError = false;
+        _booking = new();
+        _errors.Clear();
+    }
+}

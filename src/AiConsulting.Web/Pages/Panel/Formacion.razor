@@ -1,0 +1,108 @@
+@page "/panel/formacion"
+@layout PanelLayout
+@attribute [Authorize]
+@inject IPanelApiService PanelApi
+
+<h4 class="mb-4">Checklist de formación</h4>
+
+@if (_loading)
+{
+    <div class="d-flex justify-content-center py-4">
+        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
+    </div>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-semibold">Progreso global</span>
+                <span class="text-muted small">@_progress.CompletedItems / @_progress.TotalItems completados</span>
+            </div>
+            <div class="progress" style="height: 12px;">
+                <div class="progress-bar bg-success" role="progressbar"
+                     style="width: @_progress.ProgressPercentage%"
+                     aria-valuenow="@_progress.ProgressPercentage"
+                     aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <div class="text-center mt-1 small text-muted">@_progress.ProgressPercentage% completado</div>
+        </div>
+    </div>
+
+    <div class="list-group">
+        @foreach (var item in _items.OrderBy(i => i.SortOrder))
+        {
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="fw-semibold @(item.IsCompleted ? "text-decoration-line-through text-muted" : "")">
+                        @item.Name
+                    </div>
+                    @if (!string.IsNullOrEmpty(item.Description))
+                    {
+                        <div class="text-muted small">@item.Description</div>
+                    }
+                    @if (item.IsCompleted && item.CompletedAt.HasValue)
+                    {
+                        <div class="text-success" style="font-size: 0.75rem;">
+                            ✓ Completado el @item.CompletedAt.Value.ToString("dd/MM/yyyy")
+                        </div>
+                    }
+                </div>
+                <div>
+                    @if (item.IsCompleted)
+                    {
+                        <span class="badge bg-success">Completado</span>
+                    }
+                    else
+                    {
+                        <button class="btn btn-outline-success btn-sm"
+                                @onclick="() => CompleteItem(item.Id)"
+                                disabled="@_completing.Contains(item.Id)">
+                            @if (_completing.Contains(item.Id))
+                            {
+                                <span class="spinner-border spinner-border-sm me-1"></span>
+                            }
+                            Marcar completado
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<TrainingItemModel> _items = [];
+    private TrainingProgressModel _progress = new();
+    private bool _loading = true;
+    private HashSet<Guid> _completing = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        var itemsTask = PanelApi.GetChecklistAsync();
+        var progressTask = PanelApi.GetTrainingProgressAsync();
+        await Task.WhenAll(itemsTask, progressTask);
+        _items = await itemsTask;
+        _progress = await progressTask;
+        _loading = false;
+    }
+
+    private async Task CompleteItem(Guid id)
+    {
+        _completing.Add(id);
+        var updated = await PanelApi.CompleteChecklistItemAsync(id);
+        if (updated is not null)
+        {
+            var idx = _items.FindIndex(i => i.Id == id);
+            if (idx >= 0) _items[idx] = updated;
+            _progress = await PanelApi.GetTrainingProgressAsync();
+        }
+        _completing.Remove(id);
+    }
+}

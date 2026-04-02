@@ -1,0 +1,268 @@
+@page "/panel/catalogo"
+@layout PanelLayout
+@attribute [Authorize]
+@inject IPanelApiService PanelApi
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Catálogo de servicios</h4>
+    <button class="btn btn-primary btn-sm" @onclick="ShowNewForm">+ Nuevo servicio</button>
+</div>
+
+@if (_showForm)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h6 class="card-title">@(_editingId.HasValue ? "Editar servicio" : "Nuevo servicio")</h6>
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <input class="form-control form-control-sm" placeholder="Nombre *" @bind="_form.Name" />
+                </div>
+                <div class="col-md-6">
+                    <input class="form-control form-control-sm" placeholder="Sector" @bind="_form.Sector" />
+                </div>
+                <div class="col-md-6">
+                    <input class="form-control form-control-sm" placeholder="Descripción" @bind="_form.Description" />
+                </div>
+                <div class="col-md-6">
+                    <input class="form-control form-control-sm" placeholder="Beneficios" @bind="_form.Benefits" />
+                </div>
+                <div class="col-md-3">
+                    <input class="form-control form-control-sm" placeholder="Precio mín (€)" type="number" @bind="_form.PriceRangeMin" />
+                </div>
+                <div class="col-md-3">
+                    <input class="form-control form-control-sm" placeholder="Precio máx (€)" type="number" @bind="_form.PriceRangeMax" />
+                </div>
+                <div class="col-md-3">
+                    <input class="form-control form-control-sm" placeholder="Meta title" @bind="_form.MetaTitle" />
+                </div>
+                <div class="col-md-3">
+                    <input class="form-control form-control-sm" placeholder="Meta description" @bind="_form.MetaDescription" />
+                </div>
+                <div class="col-md-6">
+                    <input class="form-control form-control-sm" placeholder="Slug (URL amigable)" @bind="_form.Slug" />
+                </div>
+            </div>
+            @if (!string.IsNullOrEmpty(_formError))
+            {
+                <div class="alert alert-danger mt-2 py-1 small">@_formError</div>
+            }
+            <div class="mt-2 d-flex gap-2">
+                <button class="btn btn-primary btn-sm" @onclick="SaveService" disabled="@_saving">
+                    @if (_saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                    Guardar
+                </button>
+                <button class="btn btn-secondary btn-sm" @onclick="CancelForm">Cancelar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_deleteConfirmId.HasValue)
+{
+    <div class="alert alert-warning d-flex align-items-center gap-3">
+        <span>Este servicio tiene proyectos asociados. ¿Confirmar eliminación?</span>
+        <button class="btn btn-danger btn-sm" @onclick="ConfirmDelete">Eliminar</button>
+        <button class="btn btn-secondary btn-sm" @onclick="() => _deleteConfirmId = null">Cancelar</button>
+    </div>
+}
+
+@if (_loading)
+{
+    <div class="d-flex justify-content-center py-4">
+        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Orden</th>
+                    <th>Nombre</th>
+                    <th>Sector</th>
+                    <th>Precio</th>
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in _services.OrderBy(x => x.SortOrder))
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-outline-secondary btn-sm py-0 px-1"
+                                        @onclick="() => MoveUp(s)" title="Subir">↑</button>
+                                <button class="btn btn-outline-secondary btn-sm py-0 px-1"
+                                        @onclick="() => MoveDown(s)" title="Bajar">↓</button>
+                            </div>
+                        </td>
+                        <td>@s.Name</td>
+                        <td>@s.Sector</td>
+                        <td class="small">
+                            @if (s.PriceRangeMin.HasValue || s.PriceRangeMax.HasValue)
+                            {
+                                @($"{s.PriceRangeMin?.ToString("C0", _es)} - {s.PriceRangeMax?.ToString("C0", _es)}")
+                            }
+                        </td>
+                        <td>
+                            <span class="badge @(s.IsActive ? "bg-success" : "bg-secondary")">
+                                @(s.IsActive ? "Activo" : "Inactivo")
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-outline-primary btn-sm me-1" @onclick="() => EditService(s)">Editar</button>
+                            <button class="btn btn-outline-secondary btn-sm me-1" @onclick="() => ToggleService(s.Id)">
+                                @(s.IsActive ? "Desactivar" : "Activar")
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteService(s.Id)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+                @if (!_services.Any())
+                {
+                    <tr><td colspan="6" class="text-center text-muted py-3">No hay servicios</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private static readonly System.Globalization.CultureInfo _es = new("es-ES");
+    private List<ServiceAdminModel> _services = [];
+    private bool _loading = true;
+    private bool _saving;
+    private bool _showForm;
+    private Guid? _editingId;
+    private Guid? _deleteConfirmId;
+    private string? _formError;
+    private ServiceFormModel _form = new();
+
+    private class ServiceFormModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string? Benefits { get; set; }
+        public string? Sector { get; set; }
+        public decimal? PriceRangeMin { get; set; }
+        public decimal? PriceRangeMax { get; set; }
+        public string? MetaTitle { get; set; }
+        public string? MetaDescription { get; set; }
+        public string? Slug { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync() => await LoadServices();
+
+    private async Task LoadServices()
+    {
+        _loading = true;
+        _services = await PanelApi.GetAllServicesAsync();
+        _loading = false;
+    }
+
+    private void ShowNewForm()
+    {
+        _editingId = null;
+        _form = new ServiceFormModel();
+        _formError = null;
+        _showForm = true;
+    }
+
+    private void EditService(ServiceAdminModel s)
+    {
+        _editingId = s.Id;
+        _form = new ServiceFormModel
+        {
+            Name = s.Name, Description = s.Description, Benefits = s.Benefits,
+            Sector = s.Sector, PriceRangeMin = s.PriceRangeMin, PriceRangeMax = s.PriceRangeMax,
+            MetaTitle = s.MetaTitle, MetaDescription = s.MetaDescription, Slug = s.Slug
+        };
+        _formError = null;
+        _showForm = true;
+    }
+
+    private void CancelForm() { _showForm = false; _editingId = null; }
+
+    private async Task SaveService()
+    {
+        if (string.IsNullOrWhiteSpace(_form.Name))
+        {
+            _formError = "El nombre es obligatorio.";
+            return;
+        }
+        _saving = true;
+        _formError = null;
+
+        if (_editingId.HasValue)
+        {
+            await PanelApi.UpdateServiceAsync(_editingId.Value, new UpdateServiceAdminModel
+            {
+                Name = _form.Name, Description = _form.Description, Benefits = _form.Benefits,
+                Sector = _form.Sector, PriceRangeMin = _form.PriceRangeMin, PriceRangeMax = _form.PriceRangeMax,
+                MetaTitle = _form.MetaTitle, MetaDescription = _form.MetaDescription, Slug = _form.Slug
+            });
+        }
+        else
+        {
+            await PanelApi.CreateServiceAsync(new CreateServiceAdminModel
+            {
+                Name = _form.Name, Description = _form.Description, Benefits = _form.Benefits,
+                Sector = _form.Sector, PriceRangeMin = _form.PriceRangeMin, PriceRangeMax = _form.PriceRangeMax,
+                MetaTitle = _form.MetaTitle, MetaDescription = _form.MetaDescription, Slug = _form.Slug
+            });
+        }
+
+        _saving = false;
+        _showForm = false;
+        await LoadServices();
+    }
+
+    private async Task ToggleService(Guid id)
+    {
+        await PanelApi.ToggleServiceAsync(id);
+        await LoadServices();
+    }
+
+    private async Task DeleteService(Guid id)
+    {
+        var result = await PanelApi.DeleteServiceAsync(id, false);
+        if (result?.RequiresConfirmation == true)
+            _deleteConfirmId = id;
+        else
+            await LoadServices();
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (_deleteConfirmId.HasValue)
+        {
+            await PanelApi.DeleteServiceAsync(_deleteConfirmId.Value, true);
+            _deleteConfirmId = null;
+            await LoadServices();
+        }
+    }
+
+    private async Task MoveUp(ServiceAdminModel s)
+    {
+        var sorted = _services.OrderBy(x => x.SortOrder).ToList();
+        var idx = sorted.IndexOf(s);
+        if (idx <= 0) return;
+        sorted[idx].SortOrder--;
+        sorted[idx - 1].SortOrder++;
+        await PanelApi.ReorderServicesAsync(sorted.Select(x => new ServiceOrderModel { Id = x.Id, SortOrder = x.SortOrder }).ToList());
+        await LoadServices();
+    }
+
+    private async Task MoveDown(ServiceAdminModel s)
+    {
+        var sorted = _services.OrderBy(x => x.SortOrder).ToList();
+        var idx = sorted.IndexOf(s);
+        if (idx < 0 || idx >= sorted.Count - 1) return;
+        sorted[idx].SortOrder++;
+        sorted[idx + 1].SortOrder--;
+        await PanelApi.ReorderServicesAsync(sorted.Select(x => new ServiceOrderModel { Id = x.Id, SortOrder = x.SortOrder }).ToList());
+        await LoadServices();
+    }
+}

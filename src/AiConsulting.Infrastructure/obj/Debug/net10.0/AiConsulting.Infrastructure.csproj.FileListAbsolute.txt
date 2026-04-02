@@ -1,0 +1,17 @@
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/bin/Debug/net10.0/AiConsulting.Infrastructure.deps.json
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/bin/Debug/net10.0/AiConsulting.Infrastructure.dll
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/bin/Debug/net10.0/AiConsulting.Infrastructure.pdb
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/bin/Debug/net10.0/AiConsulting.Application.dll
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/bin/Debug/net10.0/AiConsulting.Domain.dll
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/bin/Debug/net10.0/AiConsulting.Application.pdb
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/bin/Debug/net10.0/AiConsulting.Domain.pdb
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/obj/Debug/net10.0/AiConsulting.Infrastructure.csproj.AssemblyReference.cache
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/obj/Debug/net10.0/AiConsulting.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/obj/Debug/net10.0/AiConsulting.Infrastructure.AssemblyInfoInputs.cache
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/obj/Debug/net10.0/AiConsulting.Infrastructure.AssemblyInfo.cs
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/obj/Debug/net10.0/AiConsulting.Infrastructure.csproj.CoreCompileInputs.cache
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/obj/Debug/net10.0/AiConsul.F961E29C.Up2Date
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/obj/Debug/net10.0/AiConsulting.Infrastructure.dll
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/obj/Debug/net10.0/refint/AiConsulting.Infrastructure.dll
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/obj/Debug/net10.0/AiConsulting.Infrastructure.pdb
+/Users/jh30/Desarrollo/consultorIA/src/AiConsulting.Infrastructure/obj/Debug/net10.0/ref/AiConsulting.Infrastructure.dll

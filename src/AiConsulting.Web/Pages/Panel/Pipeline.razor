@@ -1,0 +1,183 @@
+@page "/panel/pipeline"
+@layout PanelLayout
+@attribute [Authorize]
+@inject IPanelApiService PanelApi
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Pipeline de ventas</h4>
+    <button class="btn btn-primary btn-sm" @onclick="() => _showForm = true">+ Nueva oportunidad</button>
+</div>
+
+@if (!string.IsNullOrEmpty(_wonAlert))
+{
+    <div class="alert alert-success alert-dismissible">
+        @_wonAlert
+        <button type="button" class="btn-close" @onclick="() => _wonAlert = null"></button>
+    </div>
+}
+
+@if (_showForm)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h6 class="card-title">Nueva oportunidad</h6>
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <input class="form-control form-control-sm" placeholder="Nombre contacto *" @bind="_newOpp.ContactName" />
+                </div>
+                <div class="col-md-4">
+                    <input class="form-control form-control-sm" placeholder="Email contacto *" type="email" @bind="_newOpp.ContactEmail" />
+                </div>
+                <div class="col-md-4">
+                    <input class="form-control form-control-sm" placeholder="Empresa" @bind="_newOpp.Company" />
+                </div>
+                <div class="col-md-6">
+                    <input class="form-control form-control-sm" placeholder="Mensaje" @bind="_newOpp.Message" />
+                </div>
+                <div class="col-md-3">
+                    <input class="form-control form-control-sm" placeholder="Valor estimado (€)" type="number" @bind="_newOpp.EstimatedValue" />
+                </div>
+            </div>
+            @if (!string.IsNullOrEmpty(_formError))
+            {
+                <div class="alert alert-danger mt-2 py-1 small">@_formError</div>
+            }
+            <div class="mt-2 d-flex gap-2">
+                <button class="btn btn-primary btn-sm" @onclick="CreateOpportunity" disabled="@_saving">
+                    @if (_saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                    Crear
+                </button>
+                <button class="btn btn-secondary btn-sm" @onclick="() => { _showForm = false; _formError = null; }">Cancelar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_loading)
+{
+    <div class="d-flex justify-content-center py-4">
+        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
+    </div>
+}
+else
+{
+    <div class="row g-3" style="overflow-x: auto; flex-wrap: nowrap; display: flex;">
+        @foreach (var phase in _phases)
+        {
+            var group = _groups.FirstOrDefault(g => g.Phase == phase.Key);
+            <div class="col" style="min-width: 220px; max-width: 260px;">
+                <div class="card h-100">
+                    <div class="card-header py-2 small fw-semibold @phase.Value">
+                        @phase.Key <span class="badge bg-secondary ms-1">@(group?.Opportunities.Count ?? 0)</span>
+                    </div>
+                    <div class="card-body p-2" style="min-height: 200px;">
+                        @if (group is not null)
+                        {
+                            @foreach (var opp in group.Opportunities)
+                            {
+                                <div class="card mb-2 @(opp.IsStale ? "border-danger" : "")">
+                                    <div class="card-body p-2">
+                                        <div class="fw-semibold small">@opp.ContactName</div>
+                                        @if (!string.IsNullOrEmpty(opp.Company))
+                                        {
+                                            <div class="text-muted" style="font-size: 0.75rem;">@opp.Company</div>
+                                        }
+                                        @if (opp.EstimatedValue.HasValue)
+                                        {
+                                            <div class="text-success small">@opp.EstimatedValue.Value.ToString("C0", new System.Globalization.CultureInfo("es-ES"))</div>
+                                        }
+                                        @if (opp.IsStale)
+                                        {
+                                            <span class="badge bg-danger" style="font-size: 0.65rem;">Estancada</span>
+                                        }
+                                        <div class="mt-1 d-flex gap-1 flex-wrap">
+                                            @if (GetPrevPhase(phase.Key) is string prev)
+                                            {
+                                                <button class="btn btn-outline-secondary" style="font-size: 0.65rem; padding: 1px 5px;"
+                                                        @onclick="() => MoveOpp(opp.Id, prev)">← Anterior</button>
+                                            }
+                                            @if (GetNextPhase(phase.Key) is string next)
+                                            {
+                                                <button class="btn btn-outline-primary" style="font-size: 0.65rem; padding: 1px 5px;"
+                                                        @onclick="() => MoveOpp(opp.Id, next)">Siguiente →</button>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<OpportunityGroupModel> _groups = [];
+    private bool _loading = true;
+    private bool _saving;
+    private bool _showForm;
+    private string? _formError;
+    private string? _wonAlert;
+    private CreateOpportunityModel _newOpp = new();
+
+    private static readonly Dictionary<string, string> _phases = new()
+    {
+        ["Contacto inicial"] = "bg-light",
+        ["Propuesta enviada"] = "bg-info bg-opacity-25",
+        ["Negociación"] = "bg-warning bg-opacity-25",
+        ["Cerrado ganado"] = "bg-success bg-opacity-25",
+        ["Cerrado perdido"] = "bg-danger bg-opacity-25"
+    };
+
+    private static readonly List<string> _phaseOrder =
+    [
+        "Contacto inicial", "Propuesta enviada", "Negociación", "Cerrado ganado", "Cerrado perdido"
+    ];
+
+    protected override async Task OnInitializedAsync() => await LoadGroups();
+
+    private async Task LoadGroups()
+    {
+        _loading = true;
+        _groups = await PanelApi.GetOpportunitiesByPhaseAsync();
+        _loading = false;
+    }
+
+    private async Task CreateOpportunity()
+    {
+        if (string.IsNullOrWhiteSpace(_newOpp.ContactName) || string.IsNullOrWhiteSpace(_newOpp.ContactEmail))
+        {
+            _formError = "Nombre y email del contacto son obligatorios.";
+            return;
+        }
+        _saving = true;
+        _formError = null;
+        await PanelApi.CreateOpportunityAsync(_newOpp);
+        _newOpp = new CreateOpportunityModel();
+        _showForm = false;
+        _saving = false;
+        await LoadGroups();
+    }
+
+    private async Task MoveOpp(Guid id, string newPhase)
+    {
+        var result = await PanelApi.MoveToPhaseAsync(id, newPhase);
+        if (result?.RequiresProjectCreation == true)
+            _wonAlert = "¡Oportunidad ganada! Recuerda crear un proyecto.";
+        await LoadGroups();
+    }
+
+    private string? GetNextPhase(string current)
+    {
+        var idx = _phaseOrder.IndexOf(current);
+        return idx >= 0 && idx < _phaseOrder.Count - 1 ? _phaseOrder[idx + 1] : null;
+    }
+
+    private string? GetPrevPhase(string current)
+    {
+        var idx = _phaseOrder.IndexOf(current);
+        return idx > 0 ? _phaseOrder[idx - 1] : null;
+    }
+}

@@ -1,0 +1,67 @@
+@page "/casos"
+@inject IPublicApiService ApiService
+
+<PageTitle>Casos de Éxito – AI Consulting</PageTitle>
+
+<h1 class="mb-4">Casos de Éxito</h1>
+
+@if (_cases == null)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>
+}
+else if (_cases.Count == 0)
+{
+    <p class="text-muted">Próximamente publicaremos nuestros casos de éxito.</p>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var (c, i) in _cases.Select((c, i) => (c, i)))
+        {
+            <div class="col-12">
+                <div class="card shadow-sm border-start border-4 @GetBorderColor(i)">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="badge bg-secondary me-2">@c.ServiceName</span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <h6 class="text-danger fw-bold">Problema</h6>
+                                <p class="mb-0">@c.Problem</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="text-primary fw-bold">Solución</h6>
+                                <p class="mb-0">@c.Solution</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="text-success fw-bold">Resultados</h6>
+                                <p class="mb-0">@c.Results</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<CaseStudyModel>? _cases;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _cases = await ApiService.GetCaseStudiesAsync();
+    }
+
+    private static string GetBorderColor(int index) => (index % 4) switch
+    {
+        0 => "border-primary",
+        1 => "border-success",
+        2 => "border-warning",
+        _ => "border-info"
+    };
+}
